@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useHashRouter } from '@/lib/hashRouter'
 import type { GalleryImage } from '@/types/gallery'
 
@@ -30,11 +30,25 @@ interface SingleImageViewProps {
  */
 export function SingleImageView({ image, totalImages, currentIndex }: SingleImageViewProps) {
   const { goBack } = useHashRouter()
+  const imageRef = useRef<HTMLImageElement>(null)
 
-  // Log when component mounts
+  // Log when component mounts and measure image position
   useEffect(() => {
     console.log('[SingleImageView] Component mounted at', Date.now())
     console.log('[SingleImageView] Image:', image.id)
+
+    // Measure image position after it renders
+    requestAnimationFrame(() => {
+      if (imageRef.current) {
+        const rect = imageRef.current.getBoundingClientRect()
+        console.log('[SingleImageView] Fullscreen image position:', {
+          center: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+          size: { width: rect.width, height: rect.height },
+          rect: rect
+        })
+      }
+    })
+
     return () => {
       console.log('[SingleImageView] Component unmounting at', Date.now())
     }
@@ -125,10 +139,8 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
       </div>
 
       {/* Main image */}
-      <motion.img
-        initial={{ scale: 0.95 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+      <img
+        ref={imageRef}
         src={image.src}
         alt={image.alt}
         onClick={(e) => e.stopPropagation()}

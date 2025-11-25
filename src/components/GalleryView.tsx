@@ -106,6 +106,18 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
     const deltaX = viewportCenterX - imageCenterX
     const deltaY = viewportCenterY - imageCenterY
 
+    // Calculate final image position after zoom
+    const finalImageX = imageCenterX + deltaX
+    const finalImageY = imageCenterY + deltaY
+    const finalImageWidth = clickedImageRect.width * targetScale
+    const finalImageHeight = clickedImageRect.height * targetScale
+
+    console.log('[GalleryView] Zoom end position:', {
+      center: { x: finalImageX, y: finalImageY },
+      size: { width: finalImageWidth, height: finalImageHeight },
+      scale: targetScale
+    })
+
     return {
       scale: targetScale,
       x: deltaX,
