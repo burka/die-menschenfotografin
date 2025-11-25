@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useHashRouter } from '@/lib/hashRouter'
 import type { GalleryImage } from '@/types/gallery'
@@ -13,11 +13,43 @@ interface GalleryViewProps {
 }
 
 export function GalleryView({ categorySlug, images, categoryTitle }: GalleryViewProps) {
-  const { navigateTo } = useHashRouter()
+  const { navigateTo, route } = useHashRouter()
   const gridRef = useRef<HTMLDivElement>(null)
   const [clickedImageRect, setClickedImageRect] = useState<DOMRect | null>(null)
   const [gridRect, setGridRect] = useState<DOMRect | null>(null)
   const [targetImage, setTargetImage] = useState<GalleryImage | null>(null)
+  const [isZoomingOut, setIsZoomingOut] = useState(false)
+
+  // On mount, check if we're returning from single view - trigger zoom out
+  useEffect(() => {
+    const lastClickedImageId = sessionStorage.getItem('lastClickedImageId')
+    const lastImageRect = sessionStorage.getItem('lastClickedImageRect')
+    const lastGridRect = sessionStorage.getItem('lastGridRect')
+
+    if (lastClickedImageId && lastImageRect && lastGridRect && gridRef.current) {
+      // We're coming back from single view, start zoomed in and zoom out
+      const image = images.find(img => img.id === lastClickedImageId)
+      if (image) {
+        setTargetImage(image)
+        setClickedImageRect(JSON.parse(lastImageRect))
+        setGridRect(JSON.parse(lastGridRect))
+        setIsZoomingOut(true)
+
+        // Clear immediately to prevent loop
+        sessionStorage.removeItem('lastClickedImageId')
+        sessionStorage.removeItem('lastClickedImageRect')
+        sessionStorage.removeItem('lastGridRect')
+
+        // Zoom out after a brief moment
+        setTimeout(() => {
+          setTargetImage(null)
+          setClickedImageRect(null)
+          setGridRect(null)
+          setIsZoomingOut(false)
+        }, 50)
+      }
+    }
+  }, [images])
 
   const handleImageClick = (image: GalleryImage, event: React.MouseEvent<HTMLImageElement>) => {
     if (targetImage || !gridRef.current) return // Already animating
@@ -29,10 +61,13 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
     setGridRect(containerRect)
     setTargetImage(image)
 
-    // Navigate after animation completes
-    setTimeout(() => {
-      navigateTo(`gallery/${categorySlug}/${image.id}`)
-    }, 700)
+    // Store for reverse animation when we come back
+    sessionStorage.setItem('lastClickedImageId', image.id)
+    sessionStorage.setItem('lastClickedImageRect', JSON.stringify(imageRect))
+    sessionStorage.setItem('lastGridRect', JSON.stringify(containerRect))
+
+    // Navigate immediately - no delay, let the zoom happen visually
+    navigateTo(`gallery/${categorySlug}/${image.id}`)
   }
 
   // Calculate animation values when we have a clicked image
