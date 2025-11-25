@@ -1,8 +1,21 @@
-# Payload Cloudflare Template
+# die-menschenfotografin.de
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/payloadcms/payload/tree/main/templates/with-cloudflare-d1)
+Photography portfolio website with cinematic gallery zoom animations.
 
-**This can only be deployed on Paid Workers right now due to size limits.** This template comes configured with the bare minimum to get started on anything you need.
+## 🌐 Live Sites
+
+- **Preview**: [https://die-menschenfotografin.async.workers.dev](https://die-menschenfotografin.async.workers.dev)
+- **Production**: [https://die-menschenfotografin.de](https://die-menschenfotografin.de) *(coming soon)*
+
+## ✨ Features
+
+- **Cinematic Zoom Animations**: Whole-canvas zoom transitions using framer-motion
+- **Payload CMS**: Headless CMS with D1 SQLite database + R2 storage
+- **Flexible Content Blocks**: Drag-and-drop gallery and richtext blocks per category
+- **Hash-based Routing**: Client-side routing for smooth navigation
+- **Mobile-Responsive**: Masonry grid adapts from 4 → 3 → 2 → 1 columns
+
+**Requires Paid Cloudflare Workers plan** due to bundle size limits (>3MB).
 
 ## Quick start
 
