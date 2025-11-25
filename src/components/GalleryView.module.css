@@ -24,26 +24,26 @@
 }
 
 .galleryGrid {
-  column-count: 4;
+  column-count: 8;
   column-gap: 16px;
 }
 
 @media (max-width: 1200px) {
   .galleryGrid {
-    column-count: 3;
+    column-count: 6;
   }
 }
 
 @media (max-width: 768px) {
   .galleryGrid {
-    column-count: 2;
+    column-count: 4;
     column-gap: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .galleryGrid {
-    column-count: 1;
+    column-count: 2;
   }
 }
 
