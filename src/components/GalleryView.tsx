@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useHashRouter } from '@/lib/hashRouter'
 import type { GalleryImage } from '@/types/gallery'
@@ -12,93 +12,76 @@ interface GalleryViewProps {
   categoryTitle: string
 }
 
-interface ZoomState {
-  scale: number
-  x: number
-  y: number
-  originX: number
-  originY: number
-}
-
 export function GalleryView({ categorySlug, images, categoryTitle }: GalleryViewProps) {
   const { navigateTo } = useHashRouter()
-  const [zoomState, setZoomState] = useState<ZoomState>({
-    scale: 1,
-    x: 0,
-    y: 0,
-    originX: 50,
-    originY: 50
-  })
-  const [isZooming, setIsZooming] = useState(false)
-  const containerRef = useRef<HTMLDivElement>(null)
+  const [clickedImageRect, setClickedImageRect] = useState<DOMRect | null>(null)
+  const [targetImage, setTargetImage] = useState<GalleryImage | null>(null)
 
   const handleImageClick = (image: GalleryImage, event: React.MouseEvent<HTMLImageElement>) => {
-    if (isZooming || !containerRef.current) return
+    if (targetImage) return // Already animating
 
-    const target = event.currentTarget
-    const imageRect = target.getBoundingClientRect()
-    const containerRect = containerRef.current.getBoundingClientRect()
+    const imageRect = event.currentTarget.getBoundingClientRect()
+    setClickedImageRect(imageRect)
+    setTargetImage(image)
 
-    // Image center in viewport coordinates
-    const imageCenterX = imageRect.left + imageRect.width / 2
-    const imageCenterY = imageRect.top + imageRect.height / 2
+    // Navigate after animation completes
+    setTimeout(() => {
+      navigateTo(`gallery/${categorySlug}/${image.id}`)
+    }, 700)
+  }
 
-    // Image center relative to container (as percentage for transform-origin)
-    const originXPercent = ((imageCenterX - containerRect.left) / containerRect.width) * 100
-    const originYPercent = ((imageCenterY - containerRect.top) / containerRect.height) * 100
+  // Calculate animation values when we have a clicked image
+  const getAnimationProps = () => {
+    if (!clickedImageRect) {
+      return { scale: 1, x: 0, y: 0 }
+    }
 
-    // Calculate scale to fill viewport
-    const targetScale = Math.min(
-      (window.innerWidth * 0.9) / imageRect.width,
-      (window.innerHeight * 0.85) / imageRect.height
-    )
+    // Current image center
+    const imageCenterX = clickedImageRect.left + clickedImageRect.width / 2
+    const imageCenterY = clickedImageRect.top + clickedImageRect.height / 2
 
     // Viewport center
     const viewportCenterX = window.innerWidth / 2
     const viewportCenterY = window.innerHeight / 2
 
-    // Translation needed to move the origin point to viewport center
-    const translateX = viewportCenterX - imageCenterX
-    const translateY = viewportCenterY - imageCenterY
+    // How much to scale the image to fill viewport
+    const targetScale = Math.min(
+      (window.innerWidth * 0.9) / clickedImageRect.width,
+      (window.innerHeight * 0.85) / clickedImageRect.height
+    )
 
-    setIsZooming(true)
-    setZoomState({
+    // Move image center to viewport center
+    const deltaX = viewportCenterX - imageCenterX
+    const deltaY = viewportCenterY - imageCenterY
+
+    return {
       scale: targetScale,
-      x: translateX,
-      y: translateY,
-      originX: originXPercent,
-      originY: originYPercent
-    })
-
-    // Navigate after zoom animation completes
-    setTimeout(() => {
-      navigateTo(`gallery/${categorySlug}/${image.id}`)
-    }, 700)
+      x: deltaX,
+      y: deltaY,
+    }
   }
+
+  const animationProps = getAnimationProps()
 
   return (
     <div className={styles.wrapper}>
       <motion.h1
         className={styles.title}
         initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: isZooming ? 0 : 1, y: 0 }}
+        animate={{ opacity: targetImage ? 0 : 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
         {categoryTitle}
       </motion.h1>
 
       <motion.div
-        ref={containerRef}
         className={styles.galleryGrid}
         initial={{ opacity: 0 }}
         animate={{
           opacity: 1,
-          scale: zoomState.scale,
-          x: zoomState.x,
-          y: zoomState.y,
-        }}
-        style={{
-          transformOrigin: `${zoomState.originX}% ${zoomState.originY}%`,
+          scale: animationProps.scale,
+          x: animationProps.x,
+          y: animationProps.y,
         }}
         transition={{
           opacity: { duration: 0.5, delay: 0.2 },
@@ -117,14 +100,14 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
               duration: 0.5,
               delay: 0.3 + index * 0.05,
             }}
-            whileHover={!isZooming ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
+            whileHover={!targetImage ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
           >
             <img
               src={image.src}
               alt={image.alt}
               onClick={(e) => handleImageClick(image, e)}
               className={styles.image}
-              style={{ cursor: isZooming ? 'default' : 'pointer' }}
+              style={{ cursor: targetImage ? 'default' : 'pointer' }}
             />
           </motion.div>
         ))}
