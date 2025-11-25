@@ -1,6 +1,5 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useEffect, useRef } from 'react'
 import { useHashRouter } from '@/lib/hashRouter'
 import type { GalleryImage } from '@/types/gallery'
@@ -140,7 +139,7 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
         onClick={(e) => e.stopPropagation()}
         style={{
           maxWidth: '90vw',
-          maxHeight: hasMetadata ? '70vh' : '85vh',
+          maxHeight: '70vh',
           width: 'auto',
           height: 'auto',
           objectFit: 'contain',
@@ -150,10 +149,7 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
 
       {/* Metadata overlay at bottom - only if data exists */}
       {hasMetadata && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.3 }}
+        <div
           style={{
             position: 'fixed',
             bottom: 0,
@@ -212,7 +208,7 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
               />
             )}
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   )
