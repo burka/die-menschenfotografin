@@ -153,14 +153,16 @@ export default function HomePage() {
   }
 
   if (route.view === 'gallery' && route.category === 'kindergarten') {
+    console.log('[Page] Rendering GalleryView at', Date.now())
     return (
-      <AnimatePresence mode="wait">
+      <AnimatePresence>
         <motion.div
           key="gallery"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 1 }}
           transition={{ duration: 0 }}
+          onAnimationComplete={() => console.log('[Page] GalleryView animation complete')}
         >
           <GalleryView
             categorySlug="kindergarten"
@@ -190,6 +192,7 @@ export default function HomePage() {
       )
     }
 
+    console.log('[Page] Rendering SingleImageView at', Date.now(), 'for image', route.imageId)
     return (
       <AnimatePresence mode="wait">
         <SingleImageView

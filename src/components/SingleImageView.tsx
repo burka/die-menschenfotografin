@@ -31,6 +31,15 @@ interface SingleImageViewProps {
 export function SingleImageView({ image, totalImages, currentIndex }: SingleImageViewProps) {
   const { goBack } = useHashRouter()
 
+  // Log when component mounts
+  useEffect(() => {
+    console.log('[SingleImageView] Component mounted at', Date.now())
+    console.log('[SingleImageView] Image:', image.id)
+    return () => {
+      console.log('[SingleImageView] Component unmounting at', Date.now())
+    }
+  }, [image.id])
+
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -74,11 +83,13 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
       onClick={handleOverlayClick}
+      onAnimationStart={() => console.log('[SingleImageView] Animation started at', Date.now())}
+      onAnimationComplete={() => console.log('[SingleImageView] Animation complete at', Date.now())}
       style={{
         position: 'fixed',
         top: 0,

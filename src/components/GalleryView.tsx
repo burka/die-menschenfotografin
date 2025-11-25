@@ -57,6 +57,9 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
     const imageRect = event.currentTarget.getBoundingClientRect()
     const containerRect = gridRef.current.getBoundingClientRect()
 
+    console.log('[GalleryView] Image clicked at', Date.now())
+    console.log('[GalleryView] Image rect:', imageRect)
+
     setClickedImageRect(imageRect)
     setGridRect(containerRect)
     setTargetImage(image)
@@ -66,8 +69,11 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
     sessionStorage.setItem('lastClickedImageRect', JSON.stringify(imageRect))
     sessionStorage.setItem('lastGridRect', JSON.stringify(containerRect))
 
+    console.log('[GalleryView] Starting 700ms zoom animation...')
+
     // Navigate after zoom completes - MUST delay or animation won't play
     setTimeout(() => {
+      console.log('[GalleryView] Zoom complete, navigating to SingleImageView at', Date.now())
       navigateTo(`gallery/${categorySlug}/${image.id}`)
     }, 700)
   }
