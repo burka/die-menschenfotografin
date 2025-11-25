@@ -113,9 +113,11 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
         {currentIndex + 1} / {totalImages}
       </div>
 
-      {/* Main image with shared layout animation */}
+      {/* Main image */}
       <motion.img
-        layoutId={image.id}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         src={image.src}
         alt={image.alt}
         onClick={(e) => e.stopPropagation()}
