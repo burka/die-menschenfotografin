@@ -194,14 +194,12 @@ export default function HomePage() {
 
     console.log('[Page] Rendering SingleImageView at', Date.now(), 'for image', route.imageId)
     return (
-      <AnimatePresence mode="wait">
-        <SingleImageView
-          key={route.imageId}
-          image={MOCK_IMAGES[currentIndex]}
-          totalImages={MOCK_IMAGES.length}
-          currentIndex={currentIndex}
-        />
-      </AnimatePresence>
+      <SingleImageView
+        key={route.imageId}
+        image={MOCK_IMAGES[currentIndex]}
+        totalImages={MOCK_IMAGES.length}
+        currentIndex={currentIndex}
+      />
     )
   }
 

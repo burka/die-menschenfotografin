@@ -96,14 +96,8 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
   const hasMetadata = !!(image.caption || image.date || image.story)
 
   return (
-    <motion.div
-      initial={{ opacity: 1 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+    <div
       onClick={handleOverlayClick}
-      onAnimationStart={() => console.log('[SingleImageView] Animation started at', Date.now())}
-      onAnimationComplete={() => console.log('[SingleImageView] Animation complete at', Date.now())}
       style={{
         position: 'fixed',
         top: 0,
@@ -220,6 +214,6 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
           </div>
         </motion.div>
       )}
-    </motion.div>
+    </div>
   )
 }
