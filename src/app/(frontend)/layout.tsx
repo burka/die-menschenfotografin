@@ -1,18 +1,21 @@
 import React from 'react'
+import { HashRouterProvider } from '@/lib/hashRouter'
 import './styles.css'
 
 export const metadata = {
-  description: 'A blank template using Payload in a Next.js app.',
-  title: 'Payload Blank Template',
+  description: 'die-menschenfotografin.de - Photography by Janina',
+  title: 'die-menschenfotografin.de',
 }
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
 
   return (
-    <html lang="en">
+    <html lang="de">
       <body>
-        <main>{children}</main>
+        <HashRouterProvider>
+          <main>{children}</main>
+        </HashRouterProvider>
       </body>
     </html>
   )
