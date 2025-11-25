@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useHashRouter } from '@/lib/hashRouter'
 import type { GalleryImage } from '@/types/gallery'
@@ -16,40 +16,59 @@ interface ZoomState {
   scale: number
   x: number
   y: number
+  originX: number
+  originY: number
 }
 
 export function GalleryView({ categorySlug, images, categoryTitle }: GalleryViewProps) {
   const { navigateTo } = useHashRouter()
-  const [zoomState, setZoomState] = useState<ZoomState>({ scale: 1, x: 0, y: 0 })
+  const [zoomState, setZoomState] = useState<ZoomState>({
+    scale: 1,
+    x: 0,
+    y: 0,
+    originX: 50,
+    originY: 50
+  })
   const [isZooming, setIsZooming] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const handleImageClick = (image: GalleryImage, event: React.MouseEvent<HTMLImageElement>) => {
-    if (isZooming) return
+    if (isZooming || !containerRef.current) return
 
     const target = event.currentTarget
-    const rect = target.getBoundingClientRect()
+    const imageRect = target.getBoundingClientRect()
+    const containerRect = containerRef.current.getBoundingClientRect()
 
-    // Calculate the center of the clicked image relative to viewport
-    const imageCenterX = rect.left + rect.width / 2
-    const imageCenterY = rect.top + rect.height / 2
+    // Image center in viewport coordinates
+    const imageCenterX = imageRect.left + imageRect.width / 2
+    const imageCenterY = imageRect.top + imageRect.height / 2
+
+    // Image center relative to container (as percentage for transform-origin)
+    const originXPercent = ((imageCenterX - containerRect.left) / containerRect.width) * 100
+    const originYPercent = ((imageCenterY - containerRect.top) / containerRect.height) * 100
+
+    // Calculate scale to fill viewport
+    const targetScale = Math.min(
+      (window.innerWidth * 0.9) / imageRect.width,
+      (window.innerHeight * 0.85) / imageRect.height
+    )
 
     // Viewport center
     const viewportCenterX = window.innerWidth / 2
     const viewportCenterY = window.innerHeight / 2
 
-    // Calculate scale to make image fill most of the viewport
-    const targetScale = Math.min(
-      (window.innerWidth * 0.9) / rect.width,
-      (window.innerHeight * 0.85) / rect.height
-    )
-
-    // Calculate translation to center the clicked image
-    // We need to account for the scale transform origin (center of gallery)
-    const translateX = (viewportCenterX - imageCenterX) / targetScale
-    const translateY = (viewportCenterY - imageCenterY) / targetScale
+    // Translation needed to move the origin point to viewport center
+    const translateX = viewportCenterX - imageCenterX
+    const translateY = viewportCenterY - imageCenterY
 
     setIsZooming(true)
-    setZoomState({ scale: targetScale, x: translateX, y: translateY })
+    setZoomState({
+      scale: targetScale,
+      x: translateX,
+      y: translateY,
+      originX: originXPercent,
+      originY: originYPercent
+    })
 
     // Navigate after zoom animation completes
     setTimeout(() => {
@@ -69,6 +88,7 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
       </motion.h1>
 
       <motion.div
+        ref={containerRef}
         className={styles.galleryGrid}
         initial={{ opacity: 0 }}
         animate={{
@@ -76,6 +96,9 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
           scale: zoomState.scale,
           x: zoomState.x,
           y: zoomState.y,
+        }}
+        style={{
+          transformOrigin: `${zoomState.originX}% ${zoomState.originY}%`,
         }}
         transition={{
           opacity: { duration: 0.5, delay: 0.2 },
