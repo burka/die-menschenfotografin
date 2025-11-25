@@ -66,8 +66,10 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
     sessionStorage.setItem('lastClickedImageRect', JSON.stringify(imageRect))
     sessionStorage.setItem('lastGridRect', JSON.stringify(containerRect))
 
-    // Navigate immediately - no delay, let the zoom happen visually
-    navigateTo(`gallery/${categorySlug}/${image.id}`)
+    // Navigate after zoom completes - MUST delay or animation won't play
+    setTimeout(() => {
+      navigateTo(`gallery/${categorySlug}/${image.id}`)
+    }, 700)
   }
 
   // Calculate animation values when we have a clicked image
