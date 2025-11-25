@@ -107,28 +107,38 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
         }}
         suppressHydrationWarning
       >
-        {images.map((image, index) => (
-          <motion.div
-            key={image.id}
-            className={styles.imageWrapper}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.3 + index * 0.05,
-            }}
-            whileHover={!targetImage ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
-            suppressHydrationWarning
-          >
-            <img
-              src={image.src}
-              alt={image.alt}
-              onClick={(e) => handleImageClick(image, e)}
-              className={styles.image}
-              style={{ cursor: targetImage ? 'default' : 'pointer' }}
-            />
-          </motion.div>
-        ))}
+        {images.map((image, index) => {
+          const isClickedImage = targetImage?.id === image.id
+          const shouldFadeOut = targetImage && !isClickedImage
+
+          return (
+            <motion.div
+              key={image.id}
+              className={styles.imageWrapper}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: shouldFadeOut ? 0 : 1,
+                scale: 1,
+                filter: shouldFadeOut ? 'blur(10px)' : 'blur(0px)',
+              }}
+              transition={{
+                opacity: shouldFadeOut ? { duration: 0.6, ease: [0.4, 0, 0.2, 1] } : { duration: 0.5, delay: 0.3 + index * 0.05 },
+                scale: { duration: 0.5, delay: 0.3 + index * 0.05 },
+                filter: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+              }}
+              whileHover={!targetImage ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
+              suppressHydrationWarning
+            >
+              <img
+                src={image.src}
+                alt={image.alt}
+                onClick={(e) => handleImageClick(image, e)}
+                className={styles.image}
+                style={{ cursor: targetImage ? 'default' : 'pointer' }}
+              />
+            </motion.div>
+          )
+        })}
       </motion.div>
     </div>
   )
