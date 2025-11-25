@@ -3,7 +3,7 @@ import { HashRouterProvider } from '@/lib/hashRouter'
 import './styles.css'
 
 export const metadata = {
-  description: 'die-menschenfotografin.de - Photography by Janina',
+  description: 'die-menschenfotografin.de - Photography by Kathrin',
   title: 'die-menschenfotografin.de',
 }
 
