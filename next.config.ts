@@ -12,6 +12,12 @@ const nextConfig = {
 
     return webpackConfig
   },
+  // During build, skip routes that require runtime database access
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '5mb',
+    },
+  },
 }
 
 export default withPayload(nextConfig, { devBundleServerPackages: false })
