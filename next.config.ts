@@ -15,7 +15,7 @@ const nextConfig = {
   // During build, skip routes that require runtime database access
   experimental: {
     serverActions: {
-      bodySizeLimit: '5mb',
+      bodySizeLimit: 5242880, // 5MB in bytes
     },
   },
 }
