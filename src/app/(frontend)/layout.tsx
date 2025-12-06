@@ -1,5 +1,4 @@
 import React from 'react'
-import { HashRouterProvider } from '@/lib/hashRouter'
 import './styles.css'
 
 export const metadata = {
@@ -13,9 +12,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="de">
       <body>
-        <HashRouterProvider>
-          <main>{children}</main>
-        </HashRouterProvider>
+        <main>{children}</main>
       </body>
     </html>
   )
