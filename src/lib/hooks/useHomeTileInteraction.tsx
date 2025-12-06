@@ -10,6 +10,7 @@ interface UseHomeTileInteractionReturn {
   getTileState: (slug: string) => TileState
   observeElement: (slug: string, element: HTMLElement | null) => void
   unobserveElement: (slug: string) => void
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
 
 // Delay before deactivating to prevent flicker when switching tiles
@@ -41,6 +42,7 @@ export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
     activeCategory: scrollActiveCategory,
     observeElement,
     unobserveElement,
+    containerRef,
   } = useMobileScrollActivation(isMobile)
 
   // Use scroll-based active category on mobile, hover-based on desktop
@@ -99,5 +101,6 @@ export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
     getTileState,
     observeElement,
     unobserveElement,
+    containerRef,
   }
 }

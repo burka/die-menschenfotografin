@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CategoryTile, TileState } from '@/types/homepage'
 import { usePageTransition } from '@/lib/PageTransitionContext'
@@ -19,26 +19,26 @@ const TRANSITION_EASING = [0.4, 0, 0.2, 1] as const
 const HOVER_DURATION = 0.5
 const ENTRY_DURATION = 0.7
 
-const getScaleForState = (state: TileState): number => {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+const getScaleForState = (state: TileState, isMobile: boolean): number => {
+  // On mobile, height is controlled via CSS, no scaling needed
+  if (isMobile) return 1
 
   switch (state) {
     case 'active':
-      return isMobile ? 1.15 : 1.5 // More subtle scaling on mobile
+      return 1.5
     case 'inactive':
-      return isMobile ? 0.85 : 0.5 // Less dramatic on mobile to keep content readable
+      return 0.5
     default:
       return 1
   }
 }
 
-const getFilterForState = (state: TileState): string => {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+const getFilterForState = (state: TileState, isMobile: boolean): string => {
+  // On mobile, inactive tiles hide the image via CSS opacity, no filter needed
+  if (isMobile) return 'blur(0px) grayscale(0%)'
 
   if (state === 'inactive') {
-    return isMobile
-      ? 'blur(2px) grayscale(30%)' // Subtle effects on mobile
-      : 'blur(4px) grayscale(50%)'
+    return 'blur(4px) grayscale(50%)'
   }
   return 'blur(0px) grayscale(0%)'
 }
@@ -59,6 +59,19 @@ export function HomeTile({
   const containerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const { transition } = usePageTransition()
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const urlParams = new URLSearchParams(window.location.search)
+      const forceMobile = urlParams.get('mobile') === 'true'
+      setIsMobile(forceMobile || window.innerWidth <= 768)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   // Hide title when this tile is the target of an active transition
   const isTransitioning =
@@ -78,11 +91,12 @@ export function HomeTile({
     <motion.div
       ref={containerRef}
       className={styles.container}
+      data-mobile-state={isMobile ? state : undefined}
       initial={skipEntryAnimation ? false : { opacity: 0, filter: 'blur(20px)' }}
       animate={{
         opacity: 1,
-        scale: getScaleForState(state),
-        filter: getFilterForState(state),
+        scale: getScaleForState(state, isMobile),
+        filter: getFilterForState(state, isMobile),
       }}
       transition={{
         opacity: { duration: skipEntryAnimation ? 0 : ENTRY_DURATION, ease: TRANSITION_EASING },

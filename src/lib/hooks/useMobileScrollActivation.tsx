@@ -4,21 +4,24 @@ interface UseMobileScrollActivationReturn {
   activeCategory: string | null
   observeElement: (slug: string, element: HTMLElement | null) => void
   unobserveElement: (slug: string) => void
+  containerRef: React.RefObject<HTMLDivElement | null>
 }
+
+// First category slug for initial activation
+const FIRST_CATEGORY_SLUG = 'business-event'
 
 export function useMobileScrollActivation(
   enabled: boolean = true,
 ): UseMobileScrollActivationReturn {
   const [activeCategory, setActiveCategory] = useState<string | null>(null)
-  const observerRef = useRef<IntersectionObserver | null>(null)
   const elementsRef = useRef<Map<string, HTMLElement>>(new Map())
-  const ratiosRef = useRef<Map<string, number>>(new Map())
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const initializedRef = useRef(false)
 
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
     const checkMobile = () => {
-      // Enable for testing when URL contains ?mobile=true
       const urlParams =
         typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
       const forceMobile = urlParams?.get('mobile') === 'true'
@@ -31,92 +34,82 @@ export function useMobileScrollActivation(
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
+  // Initialize first category as active on mobile
   useEffect(() => {
-    if (!enabled || !isMobile) {
-      // Clean up observer if disabled or not mobile
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-        observerRef.current = null
+    if (enabled && isMobile && !initializedRef.current) {
+      initializedRef.current = true
+      setActiveCategory(FIRST_CATEGORY_SLUG)
+    }
+  }, [enabled, isMobile])
+
+  // Use scroll-based detection: find element closest to viewport top
+  useEffect(() => {
+    if (!enabled || !isMobile) return
+
+    const findActiveElement = () => {
+      if (elementsRef.current.size === 0) return
+
+      const viewportTop = 80 // Offset from top to determine "active" zone
+      let closestSlug: string | null = null
+      let closestDistance = Infinity
+
+      elementsRef.current.forEach((element, slug) => {
+        const rect = element.getBoundingClientRect()
+        // Distance from element top to viewport target position
+        const distance = Math.abs(rect.top - viewportTop)
+
+        // Only consider elements that are at least partially visible
+        if (rect.bottom > 0 && rect.top < window.innerHeight) {
+          if (distance < closestDistance) {
+            closestDistance = distance
+            closestSlug = slug
+          }
+        }
+      })
+
+      if (closestSlug) {
+        setActiveCategory(closestSlug)
       }
-      return
     }
 
-    // Create Intersection Observer with custom threshold for smooth transitions
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        // Update ratios for all observed elements
-        entries.forEach((entry) => {
-          const slug = entry.target.getAttribute('data-slug')
-          if (slug) {
-            ratiosRef.current.set(slug, entry.intersectionRatio)
-          }
-        })
+    const container = containerRef.current
+    if (!container) {
+      // Fallback: listen to window scroll
+      window.addEventListener('scroll', findActiveElement, { passive: true })
+      return () => window.removeEventListener('scroll', findActiveElement)
+    }
 
-        // Find the element with highest intersection ratio
-        let maxRatio = 0
-        let mostVisibleSlug: string | null = null
-
-        ratiosRef.current.forEach((ratio, slug) => {
-          if (ratio > maxRatio) {
-            maxRatio = ratio
-            mostVisibleSlug = slug
-          }
-        })
-
-        // Only update if we have a significantly visible element
-        if (mostVisibleSlug && maxRatio > 0.1) {
-          setActiveCategory(mostVisibleSlug)
-        }
-      },
-      {
-        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
-        rootMargin: '-20% 0px -20% 0px',
-      },
-    )
+    // Listen for scroll events on the container
+    container.addEventListener('scroll', findActiveElement, { passive: true })
+    // Also listen to touch events for better mobile support
+    container.addEventListener('touchmove', findActiveElement, { passive: true })
 
     return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect()
-      }
+      container.removeEventListener('scroll', findActiveElement)
+      container.removeEventListener('touchmove', findActiveElement)
     }
   }, [enabled, isMobile])
 
   const observeElement = useCallback(
     (slug: string, element: HTMLElement | null) => {
-      if (!enabled || !isMobile || !observerRef.current) return
-
-      // Remove old element if exists
-      const oldElement = elementsRef.current.get(slug)
-      if (oldElement) {
-        observerRef.current.unobserve(oldElement)
-      }
-
       if (element) {
         element.setAttribute('data-slug', slug)
-        observerRef.current.observe(element)
         elementsRef.current.set(slug, element)
       } else {
         elementsRef.current.delete(slug)
-        ratiosRef.current.delete(slug)
       }
     },
-    [enabled, isMobile],
+    [],
   )
 
   const unobserveElement = useCallback((slug: string) => {
-    if (!observerRef.current) return
-
-    const element = elementsRef.current.get(slug)
-    if (element) {
-      observerRef.current.unobserve(element)
-      elementsRef.current.delete(slug)
-      ratiosRef.current.delete(slug)
-    }
+    elementsRef.current.delete(slug)
   }, [])
 
   return {
     activeCategory,
     observeElement,
     unobserveElement,
+    containerRef,
   }
 }

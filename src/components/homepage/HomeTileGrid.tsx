@@ -3,7 +3,6 @@
 import { useRef, useEffect } from 'react'
 import { CATEGORIES } from '@/data/categories'
 import { useHomeTileInteraction } from '@/lib/hooks/useHomeTileInteraction'
-import { useMobileScrollHeight } from '@/lib/hooks/useMobileScrollHeight'
 import { usePageTransition } from '@/lib/PageTransitionContext'
 import { BrandingOverlay } from './BrandingOverlay'
 import { DynamicBackground } from './DynamicBackground'
@@ -23,6 +22,7 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
     getTileState,
     observeElement,
     unobserveElement,
+    containerRef,
   } = useHomeTileInteraction()
   const { transition } = usePageTransition()
 
@@ -47,9 +47,6 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
     }
   }, [observeElement, unobserveElement])
 
-  // Get dynamic grid styles for mobile scroll height
-  const mobileGridStyles = useMobileScrollHeight(activeCategory)
-
   // Use lastActiveCategory for background to persist the image when leaving tiles
   const backgroundImage =
     lastActiveCategory !== null
@@ -61,16 +58,17 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
   const bottomCategories = CATEGORIES.slice(2, 4)
 
   return (
-    <div className={styles.container}>
+    <div className={styles.container} ref={containerRef}>
       <DynamicBackground backgroundImage={backgroundImage} />
 
-      <div className={styles.grid} style={mobileGridStyles}>
+      <div className={styles.grid}>
         {/* Top row tiles */}
         {topCategories.map((category, index) => (
           <div
             key={category.slug}
             className={styles.gridItem}
             data-position={index}
+            data-state={getTileState(category.slug)}
             ref={(el) => {
               tileRefs.current[category.slug] = el
             }}
@@ -97,6 +95,7 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
             key={category.slug}
             className={styles.gridItem}
             data-position={index + 2}
+            data-state={getTileState(category.slug)}
             ref={(el) => {
               tileRefs.current[category.slug] = el
             }}
