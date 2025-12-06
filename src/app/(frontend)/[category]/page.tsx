@@ -191,10 +191,12 @@ function CategoryPageContent({ categorySlug }: CategoryPageContentProps) {
   )
 }
 
-export default function CategoryPage({ params }: { params: { category: string } }) {
+export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+  const { category } = await params
+
   return (
     <GalleryTransitionProvider>
-      <CategoryPageContent categorySlug={params.category} />
+      <CategoryPageContent categorySlug={category} />
     </GalleryTransitionProvider>
   )
 }
