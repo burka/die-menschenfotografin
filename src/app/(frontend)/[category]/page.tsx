@@ -148,6 +148,7 @@ function CategoryPageContent({ categorySlug }: CategoryPageContentProps) {
         title={category.title}
         heroImage={category.previewImage}
         breadcrumbs={breadcrumbs}
+        categorySlug={categorySlug}
       />
 
       <main

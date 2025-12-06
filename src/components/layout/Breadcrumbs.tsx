@@ -12,9 +12,10 @@ export interface BreadcrumbItem {
 interface BreadcrumbsProps {
   items: BreadcrumbItem[]
   className?: string
+  onHomeClick?: () => void
 }
 
-export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
+export function Breadcrumbs({ items, className, onHomeClick }: BreadcrumbsProps) {
   return (
     <nav className={`${styles.breadcrumbs} ${className || ''}`} aria-label="Breadcrumb">
       <ol className={styles.list}>
@@ -26,9 +27,19 @@ export function Breadcrumbs({ items, className }: BreadcrumbsProps) {
               </span>
             ) : (
               <>
-                <Link href={item.href} className={styles.link}>
-                  {item.label}
-                </Link>
+                {item.href === '/' && onHomeClick ? (
+                  <button
+                    type="button"
+                    onClick={onHomeClick}
+                    className={styles.link}
+                  >
+                    {item.label}
+                  </button>
+                ) : (
+                  <Link href={item.href} className={styles.link}>
+                    {item.label}
+                  </Link>
+                )}
                 {index < items.length - 1 && (
                   <span className={styles.separator} aria-hidden="true">
                     /

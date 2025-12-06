@@ -1,5 +1,48 @@
+/* Font declarations */
+@font-face {
+  font-family: 'Autography';
+  src: url('/fonts/Autography.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src: url('/fonts/pt-sans-v17-latin-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src: url('/fonts/pt-sans-v17-latin-700.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src: url('/fonts/pt-sans-v17-latin-italic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'PT Sans';
+  src: url('/fonts/pt-sans-v17-latin-700italic.woff2') format('woff2');
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   --font-mono: 'Roboto Mono', monospace;
+  --font-signature: 'Autography', cursive;
+  --font-body: 'PT Sans', system-ui, sans-serif;
 }
 
 * {
@@ -9,7 +52,7 @@
 html {
   font-size: 18px;
   line-height: 32px;
-  background: rgb(0, 0, 0);
+  background: transparent;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -26,7 +69,7 @@ body {
   line-height: 32px;
   margin: 0;
   color: rgb(255, 255, 255);
-  background: rgb(0, 0, 0);
+  background: transparent;
 
   @media (max-width: 1024px) {
     font-size: 15px;

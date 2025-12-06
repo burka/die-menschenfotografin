@@ -41,6 +41,60 @@
   );
 }
 
+/* Top right branding */
+.topBranding {
+  position: absolute;
+  top: 16px;
+  right: 24px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.brandingLink {
+  text-decoration: none;
+  color: inherit;
+  transition: opacity 0.2s;
+}
+
+.brandingLink:hover,
+.brandingLink:focus {
+  opacity: 0.8;
+}
+
+.brandingSeparator {
+  opacity: 0.5;
+}
+
+.legalLink {
+  text-decoration: none;
+  color: inherit;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.legalLink:hover,
+.legalLink:focus {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.legalSeparator {
+  opacity: 0.5;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .topBranding {
+    display: none;
+  }
+}
+
 .content {
   position: relative;
   z-index: 1;

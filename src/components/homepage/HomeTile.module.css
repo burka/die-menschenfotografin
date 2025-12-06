@@ -9,16 +9,14 @@
 }
 
 .image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  transition: transform 0.3s ease;
-}
-
-.container:hover .image {
-  transform: scale(1.05);
 }
 
 .overlay {
@@ -37,12 +35,14 @@
 }
 
 .title {
-  font-size: 1.5rem;
-  font-weight: 400;
+  font-family: var(--font-body), sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
   margin: 0;
   color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.02em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 @media (max-width: 768px) {

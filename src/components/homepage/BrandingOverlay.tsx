@@ -1,6 +1,8 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useState } from 'react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import styles from './BrandingOverlay.module.css';
 
 interface BrandingOverlayProps {
@@ -11,21 +13,73 @@ const TRANSITION_EASING = [0.4, 0, 0.2, 1] as const;
 const TRANSITION_DURATION = 0.4;
 
 export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
   return (
     <motion.div
-      className={styles.container}
+      className={`${styles.container} ${isAnyTileActive ? styles.compact : ''}`}
       animate={{
-        scale: isAnyTileActive ? 0.7 : 1,
-        opacity: isAnyTileActive ? 0.6 : 1,
+        scale: isAnyTileActive ? 0.85 : 1,
+        opacity: isAnyTileActive ? 0.7 : 1,
       }}
       transition={{
         duration: TRANSITION_DURATION,
         ease: TRANSITION_EASING,
       }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
     >
-      <h1 className={styles.title}>Kathrin Krause</h1>
-      <h2 className={styles.subtitle}>die Menschenfotografin</h2>
-      <p className={styles.tagline}>Fine portraits for fine people</p>
+      <div className={styles.mainLine}>
+        <h1 className={styles.title}>Kathrin Krause</h1>
+        <AnimatePresence mode="wait">
+          {isAnyTileActive && (
+            <motion.span
+              className={styles.separator}
+              initial={{ opacity: 0, width: 0 }}
+              animate={{ opacity: 1, width: 'auto' }}
+              exit={{ opacity: 0, width: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              —
+            </motion.span>
+          )}
+        </AnimatePresence>
+        <motion.h2
+          className={styles.subtitle}
+          layout
+          transition={{ duration: TRANSITION_DURATION, ease: TRANSITION_EASING }}
+        >
+          die Menschenfotografin
+        </motion.h2>
+      </div>
+      <AnimatePresence mode="wait">
+        {!isAnyTileActive && (
+          <motion.div
+            key={isHovered ? 'legal' : 'tagline'}
+            className={styles.bottomLine}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.2 }}
+          >
+            {isHovered ? (
+              <div className={styles.legalLinks}>
+                <Link href="/impressum" className={styles.legalLink}>
+                  Impressum
+                </Link>
+                <span className={styles.legalSeparator}>|</span>
+                <Link href="/datenschutz" className={styles.legalLink}>
+                  Datenschutz
+                </Link>
+              </div>
+            ) : (
+              <p className={styles.tagline}>Fine portraits for fine people</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
