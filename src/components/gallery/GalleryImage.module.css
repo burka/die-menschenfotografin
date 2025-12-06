@@ -1,0 +1,18 @@
+.imageWrapper {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .imageWrapper {
+    margin-bottom: 12px;
+  }
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 4px;
+}
