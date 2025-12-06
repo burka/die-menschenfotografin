@@ -2,15 +2,21 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { TileState } from '@/types/homepage'
 import { useMobileScrollActivation } from './useMobileScrollActivation'
 
+interface TileHeights {
+  [slug: string]: number
+}
+
 interface UseHomeTileInteractionReturn {
   activeCategory: string | null
   lastActiveCategory: string | null
   handleTileEnter: (slug: string) => void
   handleTileLeave: () => void
   getTileState: (slug: string) => TileState
+  getTileHeight: (slug: string) => number | undefined
   observeElement: (slug: string, element: HTMLElement | null) => void
   unobserveElement: (slug: string) => void
   containerRef: React.RefObject<HTMLDivElement | null>
+  isMobile: boolean
 }
 
 // Delay before deactivating to prevent flicker when switching tiles
@@ -40,6 +46,7 @@ export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
 
   const {
     activeCategory: scrollActiveCategory,
+    tileHeights,
     observeElement,
     unobserveElement,
     containerRef,
@@ -93,14 +100,24 @@ export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
     [effectiveActiveCategory],
   )
 
+  const getTileHeight = useCallback(
+    (slug: string): number | undefined => {
+      if (!isMobile) return undefined
+      return tileHeights[slug]
+    },
+    [isMobile, tileHeights],
+  )
+
   return {
     activeCategory: effectiveActiveCategory,
     lastActiveCategory,
     handleTileEnter,
     handleTileLeave,
     getTileState,
+    getTileHeight,
     observeElement,
     unobserveElement,
     containerRef,
+    isMobile,
   }
 }
