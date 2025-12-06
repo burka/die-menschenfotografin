@@ -106,6 +106,22 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
           {title}
         </motion.h1>
       </div>
+
+      {/* Mobile legal links */}
+      <motion.div
+        className={styles.mobileLegalLinks}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: textVisible ? 1 : 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+      >
+        <button className={styles.legalLink} onClick={() => openLegal('impressum')}>
+          Impressum
+        </button>
+        <span className={styles.legalSeparator}>&amp;</span>
+        <button className={styles.legalLink} onClick={() => openLegal('datenschutz')}>
+          Datenschutz
+        </button>
+      </motion.div>
     </div>
   )
 }

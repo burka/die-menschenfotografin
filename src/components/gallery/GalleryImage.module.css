@@ -2,6 +2,9 @@
   break-inside: avoid;
   margin-bottom: 16px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  user-select: none;
 }
 
 @media (max-width: 768px) {
@@ -15,4 +18,5 @@
   height: auto;
   display: block;
   border-radius: 4px;
+  pointer-events: none;
 }

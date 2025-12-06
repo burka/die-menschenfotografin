@@ -14,6 +14,8 @@
   align-items: center;
   justify-content: center;
   z-index: 1001;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .counter {
@@ -46,6 +48,8 @@
   justify-content: center;
   z-index: 1001;
   transition: background-color 0.2s, opacity 0.2s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .prevButton {
@@ -54,4 +58,26 @@
 
 .nextButton {
   right: 2rem;
+}
+
+@media (max-width: 768px) {
+  .closeButton {
+    top: 1rem;
+    left: 1rem;
+  }
+
+  .counter {
+    top: 1rem;
+    right: 1rem;
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .prevButton {
+    left: 0.5rem;
+  }
+
+  .nextButton {
+    right: 0.5rem;
+  }
 }

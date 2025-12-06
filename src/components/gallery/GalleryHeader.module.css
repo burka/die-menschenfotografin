@@ -137,3 +137,28 @@
     font-size: 32px;
   }
 }
+
+/* Mobile legal links - only visible on mobile */
+.mobileLegalLinks {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileLegalLinks {
+    display: flex;
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    z-index: 2;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: var(--font-body), sans-serif;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobileLegalLinks .legalLink {
+    font-size: 0.75rem;
+  }
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLegalOverlay } from '@/lib/LegalOverlayContext';
 import styles from './BrandingOverlay.module.css';
@@ -14,7 +14,17 @@ const TRANSITION_DURATION = 0.4;
 
 export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const { openLegal } = useLegalOverlay();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <motion.div
@@ -65,7 +75,7 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
             exit={{ opacity: 0, y: -5 }}
             transition={{ duration: 0.2 }}
           >
-            {isHovered ? (
+            {isHovered && !isMobile ? (
               <div className={styles.legalLinks}>
                 <button
                   className={styles.legalLink}
@@ -82,7 +92,26 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
                 </button>
               </div>
             ) : (
-              <p className={styles.tagline}>Fine portraits for fine people</p>
+              <>
+                <p className={styles.tagline}>Fine portraits for fine people</p>
+                {isMobile && (
+                  <div className={styles.legalLinksMobile}>
+                    <button
+                      className={styles.legalLink}
+                      onClick={() => openLegal('impressum')}
+                    >
+                      Impressum
+                    </button>
+                    <span className={styles.legalSeparator}>|</span>
+                    <button
+                      className={styles.legalLink}
+                      onClick={() => openLegal('datenschutz')}
+                    >
+                      Datenschutz
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </motion.div>
         )}

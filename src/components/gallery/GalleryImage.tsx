@@ -1,5 +1,6 @@
 'use client'
 
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { GalleryImage as GalleryImageType } from '@/types/gallery'
 import styles from './GalleryImage.module.css'
@@ -21,9 +22,11 @@ export function GalleryImage({
   isTransitioning,
   index,
 }: GalleryImageProps) {
-  const handleClick = (event: React.MouseEvent<HTMLImageElement>) => {
-    if (isTransitioning) return
-    const imageRect = event.currentTarget.getBoundingClientRect()
+  const imageRef = useRef<HTMLImageElement>(null)
+
+  const handleClick = () => {
+    if (isTransitioning || !imageRef.current) return
+    const imageRect = imageRef.current.getBoundingClientRect()
     onClick(imageRect)
   }
 
@@ -78,14 +81,17 @@ export function GalleryImage({
       animate={getImageAnimate()}
       transition={getImageTransition()}
       whileHover={!isTransitioning ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
+      whileTap={!isTransitioning ? { scale: 0.98 } : {}}
+      onClick={handleClick}
+      style={{ cursor: isTransitioning ? 'default' : 'pointer' }}
       suppressHydrationWarning
     >
       <img
+        ref={imageRef}
         src={image.src}
         alt={image.alt}
-        onClick={handleClick}
         className={styles.image}
-        style={{ cursor: isTransitioning ? 'default' : 'pointer' }}
+        draggable={false}
       />
     </motion.div>
   )
