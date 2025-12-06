@@ -1,102 +1,116 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { useHashRouter } from '@/lib/hashRouter'
+import { useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
+import {
+  useGalleryTransition,
+  fadeTransition,
+  TRANSITION,
+} from '@/lib/useGalleryTransition'
 import type { GalleryImage } from '@/types/gallery'
 
-/**
- * Props for the SingleImageView component
- */
 interface SingleImageViewProps {
-  /** Image to display */
   image: GalleryImage
-  /** Total number of images in the gallery */
   totalImages: number
-  /** Current image index (0-based) */
   currentIndex: number
+  onClose: () => void
+  onPrev: (() => void) | null
+  onNext: (() => void) | null
 }
 
 /**
  * SingleImageView Component
  *
- * Displays a single image in fullscreen overlay with metadata and navigation controls.
- * Features:
- * - Fullscreen overlay with shared element transition (layoutId)
- * - Keyboard navigation (ESC to close, arrows for prev/next)
- * - Conditional metadata display (caption, date, story)
- * - Image counter
- * - Click outside to close
+ * Displays a single image in fullscreen overlay with symmetric entrance/exit animations.
  */
-export function SingleImageView({ image, totalImages, currentIndex }: SingleImageViewProps) {
-  const { goBack } = useHashRouter()
+export function SingleImageView({
+  image,
+  totalImages,
+  currentIndex,
+  onClose,
+  onPrev,
+  onNext,
+}: SingleImageViewProps) {
   const imageRef = useRef<HTMLImageElement>(null)
+  const {
+    direction,
+    startClose,
+    completeTransition,
+  } = useGalleryTransition()
 
-  // Log when component mounts and measure image position
-  useEffect(() => {
-    console.log('[SingleImageView] Component mounted at', Date.now())
-    console.log('[SingleImageView] Image:', image.id)
+  const isClosing = direction === 'closing'
+  const isOpening = direction === 'opening'
 
-    // Measure image position after it renders
-    requestAnimationFrame(() => {
-      if (imageRef.current) {
-        const rect = imageRef.current.getBoundingClientRect()
-        console.log('[SingleImageView] Fullscreen image position:', {
-          center: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
-          size: { width: rect.width, height: rect.height },
-          rect: rect
-        })
-      }
-    })
+  // Handle close action
+  const handleClose = useCallback(() => {
+    if (isClosing) return
 
-    return () => {
-      console.log('[SingleImageView] Component unmounting at', Date.now())
-    }
-  }, [image.id])
+    // Start the closing transition
+    startClose()
+
+    // Navigate after animation completes
+    setTimeout(() => {
+      completeTransition()
+      onClose()
+    }, TRANSITION.duration)
+  }, [isClosing, startClose, completeTransition, onClose])
 
   // Handle keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (isClosing) return
+
       switch (e.key) {
         case 'Escape':
-          goBack()
+          handleClose()
           break
         case 'ArrowLeft':
-          if (currentIndex > 0) {
-            // Navigate to previous image
-            // This would need the previous image ID, which we don't have
-            // For now, we just go back and let the parent handle it
-            goBack()
-          }
+          if (onPrev) onPrev()
           break
         case 'ArrowRight':
-          if (currentIndex < totalImages - 1) {
-            // Navigate to next image
-            // This would need the next image ID, which we don't have
-            // For now, we just go back and let the parent handle it
-            goBack()
-          }
+          if (onNext) onNext()
           break
       }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [currentIndex, totalImages, goBack])
+  }, [handleClose, onPrev, onNext, isClosing])
 
   // Handle click outside image to close
   const handleOverlayClick = (e: React.MouseEvent) => {
-    // Only close if clicking the overlay itself, not the image
     if (e.target === e.currentTarget) {
-      goBack()
+      handleClose()
     }
   }
 
-  // Check if we have any metadata to display
   const hasMetadata = !!(image.caption || image.date || image.story)
 
+  const navButtonStyle: React.CSSProperties = {
+    position: 'fixed',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '48px',
+    height: '48px',
+    fontSize: '1.5rem',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1001,
+    transition: 'background-color 0.2s, opacity 0.2s',
+  }
+
   return (
-    <div
+    <motion.div
       onClick={handleOverlayClick}
+      initial={{ opacity: isOpening ? 0 : 1 }}
+      animate={{ opacity: isClosing ? 0 : 1 }}
+      transition={fadeTransition}
       style={{
         position: 'fixed',
         top: 0,
@@ -113,8 +127,43 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
         overflow: 'auto',
       }}
     >
+      {/* Close button */}
+      <motion.button
+        onClick={(e) => {
+          e.stopPropagation()
+          handleClose()
+        }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isClosing ? 0 : 1 }}
+        transition={{ ...fadeTransition, delay: isOpening ? 0.3 : 0 }}
+        style={{
+          position: 'fixed',
+          top: '2rem',
+          left: '2rem',
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          color: 'white',
+          border: 'none',
+          borderRadius: '50%',
+          width: '48px',
+          height: '48px',
+          fontSize: '1.5rem',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1001,
+        }}
+        whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+        aria-label="Close"
+      >
+        ✕
+      </motion.button>
+
       {/* Image counter */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: isClosing ? 0 : 1, y: isClosing ? -10 : 0 }}
+        transition={{ ...fadeTransition, delay: isOpening ? 0.3 : 0 }}
         style={{
           position: 'fixed',
           top: '2rem',
@@ -129,14 +178,56 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
         }}
       >
         {currentIndex + 1} / {totalImages}
-      </div>
+      </motion.div>
+
+      {/* Previous button */}
+      {onPrev && (
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation()
+            onPrev()
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isClosing ? 0 : 1 }}
+          transition={{ ...fadeTransition, delay: isOpening ? 0.3 : 0 }}
+          style={{ ...navButtonStyle, left: '2rem' }}
+          whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+          aria-label="Previous image"
+        >
+          ‹
+        </motion.button>
+      )}
+
+      {/* Next button */}
+      {onNext && (
+        <motion.button
+          onClick={(e) => {
+            e.stopPropagation()
+            onNext()
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isClosing ? 0 : 1 }}
+          transition={{ ...fadeTransition, delay: isOpening ? 0.3 : 0 }}
+          style={{ ...navButtonStyle, right: '2rem' }}
+          whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.2)' }}
+          aria-label="Next image"
+        >
+          ›
+        </motion.button>
+      )}
 
       {/* Main image */}
-      <img
+      <motion.img
         ref={imageRef}
         src={image.src}
         alt={image.alt}
         onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: isOpening ? 0 : 1, scale: isOpening ? 0.95 : 1 }}
+        animate={{
+          opacity: isClosing ? 0 : 1,
+          scale: isClosing ? 0.95 : 1,
+        }}
+        transition={fadeTransition}
         style={{
           maxWidth: '90vw',
           maxHeight: '70vh',
@@ -147,9 +238,12 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
         }}
       />
 
-      {/* Metadata overlay at bottom - only if data exists */}
+      {/* Metadata overlay at bottom */}
       {hasMetadata && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: isClosing ? 0 : 1, y: isClosing ? 20 : 0 }}
+          transition={{ ...fadeTransition, delay: isOpening ? 0.4 : 0 }}
           style={{
             position: 'fixed',
             bottom: 0,
@@ -162,12 +256,7 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
             overflow: 'auto',
           }}
         >
-          <div
-            style={{
-              maxWidth: '800px',
-              margin: '0 auto',
-            }}
-          >
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
             {image.caption && (
               <p
                 style={{
@@ -208,8 +297,8 @@ export function SingleImageView({ image, totalImages, currentIndex }: SingleImag
               />
             )}
           </div>
-        </div>
+        </motion.div>
       )}
-    </div>
+    </motion.div>
   )
 }

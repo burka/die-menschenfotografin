@@ -2,6 +2,10 @@
 
 import { AnimatePresence, motion } from 'framer-motion'
 import { useHashRouter } from '@/lib/hashRouter'
+import {
+  GalleryTransitionProvider,
+  useGalleryTransition,
+} from '@/lib/useGalleryTransition'
 import { GalleryView } from '@/components/GalleryView'
 import { SingleImageView } from '@/components/SingleImageView'
 import type { GalleryImage } from '@/types/gallery'
@@ -76,8 +80,23 @@ const MOCK_IMAGES: GalleryImage[] = [
   },
 ]
 
-export default function HomePage() {
-  const { route, navigateTo } = useHashRouter()
+function HomePageContent() {
+  const { route, navigateTo, goBack } = useHashRouter()
+  const { direction } = useGalleryTransition()
+
+  // Determine what to render based on route and transition state
+  const isGalleryRoute = route.view === 'gallery' && route.category === 'kindergarten'
+  const isSingleRoute = route.view === 'single' && route.category === 'kindergarten'
+
+  // Show gallery during:
+  // 1. Gallery route (normal)
+  // 2. Single route + closing transition (for zoom-out effect)
+  const showGallery = isGalleryRoute || (isSingleRoute && direction === 'closing')
+
+  // Show single view during:
+  // 1. Single route (normal)
+  // 2. Gallery route + opening transition (for fade-in effect)
+  const showSingle = isSingleRoute || (isGalleryRoute && direction === 'opening')
 
   if (route.view === 'home') {
     return (
@@ -152,31 +171,13 @@ export default function HomePage() {
     )
   }
 
-  if (route.view === 'gallery' && route.category === 'kindergarten') {
-    console.log('[Page] Rendering GalleryView at', Date.now())
-    return (
-      <AnimatePresence>
-        <motion.div
-          key="gallery"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 1 }}
-          transition={{ duration: 0 }}
-          onAnimationComplete={() => console.log('[Page] GalleryView animation complete')}
-        >
-          <GalleryView
-            categorySlug="kindergarten"
-            categoryTitle="Kindergarten"
-            images={MOCK_IMAGES}
-          />
-        </motion.div>
-      </AnimatePresence>
-    )
-  }
+  // Gallery or Single view (with transition support)
+  if (isGalleryRoute || isSingleRoute) {
+    const currentIndex = isSingleRoute
+      ? MOCK_IMAGES.findIndex((img) => img.id === route.imageId)
+      : -1
 
-  if (route.view === 'single' && route.category === 'kindergarten') {
-    const currentIndex = MOCK_IMAGES.findIndex((img) => img.id === route.imageId)
-    if (currentIndex === -1) {
+    if (isSingleRoute && currentIndex === -1) {
       return (
         <div
           style={{
@@ -192,14 +193,41 @@ export default function HomePage() {
       )
     }
 
-    console.log('[Page] Rendering SingleImageView at', Date.now(), 'for image', route.imageId)
     return (
-      <SingleImageView
-        key={route.imageId}
-        image={MOCK_IMAGES[currentIndex]}
-        totalImages={MOCK_IMAGES.length}
-        currentIndex={currentIndex}
-      />
+      <>
+        {/* Gallery layer - rendered underneath during transitions */}
+        {showGallery && (
+          <div
+            key={direction === 'closing' ? 'gallery-closing' : 'gallery-normal'}
+            style={{ position: direction === 'closing' ? 'fixed' : 'relative', inset: 0 }}
+          >
+            <GalleryView
+              categorySlug="kindergarten"
+              categoryTitle="Kindergarten"
+              images={MOCK_IMAGES}
+            />
+          </div>
+        )}
+
+        {/* Single image layer - rendered on top */}
+        {showSingle && currentIndex >= 0 && (
+          <SingleImageView
+            key={route.imageId}
+            image={MOCK_IMAGES[currentIndex]}
+            totalImages={MOCK_IMAGES.length}
+            currentIndex={currentIndex}
+            onClose={goBack}
+            onPrev={currentIndex > 0
+              ? () => navigateTo(`gallery/kindergarten/${MOCK_IMAGES[currentIndex - 1].id}`)
+              : null
+            }
+            onNext={currentIndex < MOCK_IMAGES.length - 1
+              ? () => navigateTo(`gallery/kindergarten/${MOCK_IMAGES[currentIndex + 1].id}`)
+              : null
+            }
+          />
+        )}
+      </>
     )
   }
 
@@ -215,5 +243,13 @@ export default function HomePage() {
     >
       404 - Seite nicht gefunden
     </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <GalleryTransitionProvider>
+      <HomePageContent />
+    </GalleryTransitionProvider>
   )
 }

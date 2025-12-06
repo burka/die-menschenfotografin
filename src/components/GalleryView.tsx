@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useHashRouter } from '@/lib/hashRouter'
+import { useGalleryTransition, zoomTransition, TRANSITION } from '@/lib/useGalleryTransition'
 import type { GalleryImage } from '@/types/gallery'
 import styles from './GalleryView.module.css'
 
@@ -13,129 +14,60 @@ interface GalleryViewProps {
 }
 
 export function GalleryView({ categorySlug, images, categoryTitle }: GalleryViewProps) {
-  const { navigateTo, route } = useHashRouter()
+  const { navigateTo } = useHashRouter()
   const gridRef = useRef<HTMLDivElement>(null)
-  const [clickedImageRect, setClickedImageRect] = useState<DOMRect | null>(null)
-  const [gridRect, setGridRect] = useState<DOMRect | null>(null)
-  const [targetImage, setTargetImage] = useState<GalleryImage | null>(null)
-  const [isZoomingOut, setIsZoomingOut] = useState(false)
-
-  // On mount, check if we're returning from single view - trigger zoom out
-  useEffect(() => {
-    const lastClickedImageId = sessionStorage.getItem('lastClickedImageId')
-    const lastImageRect = sessionStorage.getItem('lastClickedImageRect')
-    const lastGridRect = sessionStorage.getItem('lastGridRect')
-
-    if (lastClickedImageId && lastImageRect && lastGridRect && gridRef.current) {
-      // We're coming back from single view, start zoomed in and zoom out
-      const image = images.find(img => img.id === lastClickedImageId)
-      if (image) {
-        setTargetImage(image)
-        setClickedImageRect(JSON.parse(lastImageRect))
-        setGridRect(JSON.parse(lastGridRect))
-        setIsZoomingOut(true)
-
-        // Clear immediately to prevent loop
-        sessionStorage.removeItem('lastClickedImageId')
-        sessionStorage.removeItem('lastClickedImageRect')
-        sessionStorage.removeItem('lastGridRect')
-
-        // Zoom out after a brief moment
-        setTimeout(() => {
-          setTargetImage(null)
-          setClickedImageRect(null)
-          setGridRect(null)
-          setIsZoomingOut(false)
-        }, 50)
-      }
-    }
-  }, [images])
+  const { isTransitioning, direction, targetImageId, startOpen, getZoomTransform } =
+    useGalleryTransition()
 
   const handleImageClick = (image: GalleryImage, event: React.MouseEvent<HTMLImageElement>) => {
-    if (targetImage || !gridRef.current) return // Already animating
+    if (isTransitioning || !gridRef.current) return
 
     const imageRect = event.currentTarget.getBoundingClientRect()
-    const containerRect = gridRef.current.getBoundingClientRect()
+    const gridRect = gridRef.current.getBoundingClientRect()
 
-    console.log('[GalleryView] Image clicked at', Date.now())
-    console.log('[GalleryView] Image rect:', imageRect)
+    // Start the opening transition
+    startOpen(image.id, imageRect, gridRect)
 
-    setClickedImageRect(imageRect)
-    setGridRect(containerRect)
-    setTargetImage(image)
-
-    // Store for reverse animation when we come back
-    sessionStorage.setItem('lastClickedImageId', image.id)
-    sessionStorage.setItem('lastClickedImageRect', JSON.stringify(imageRect))
-    sessionStorage.setItem('lastGridRect', JSON.stringify(containerRect))
-
-    console.log('[GalleryView] Starting 700ms zoom animation...')
-
-    // Navigate after zoom completes - MUST delay or animation won't play
+    // Navigate after animation completes
     setTimeout(() => {
-      console.log('[GalleryView] Zoom complete, navigating to SingleImageView at', Date.now())
       navigateTo(`gallery/${categorySlug}/${image.id}`)
-    }, 700)
+    }, TRANSITION.duration)
   }
 
-  // Calculate animation values when we have a clicked image
-  const getAnimationProps = () => {
-    if (!clickedImageRect || !gridRect) {
-      return { scale: 1, x: 0, y: 0, originX: '50%', originY: '50%' }
-    }
+  // Get zoom transform (returns null if not transitioning)
+  const zoomTransform = getZoomTransform()
 
-    // Image center in viewport
-    const imageCenterX = clickedImageRect.left + clickedImageRect.width / 2
-    const imageCenterY = clickedImageRect.top + clickedImageRect.height / 2
+  // Calculate states based on direction
+  const isOpening = direction === 'opening'
+  const isClosing = direction === 'closing'
 
-    // Transform origin as percentage within the grid
-    const originXPercent = ((imageCenterX - gridRect.left) / gridRect.width) * 100
-    const originYPercent = ((imageCenterY - gridRect.top) / gridRect.height) * 100
+  // Grid animation values
+  const zoomedState = zoomTransform
+    ? {
+        scale: zoomTransform.scale,
+        x: zoomTransform.x,
+        y: zoomTransform.y,
+      }
+    : { scale: 1, x: 0, y: 0 }
 
-    // Viewport center
-    const viewportCenterX = window.innerWidth / 2
-    const viewportCenterY = window.innerHeight / 2
+  const normalState = { scale: 1, x: 0, y: 0 }
 
-    // Scale to fill viewport
-    const targetScale = Math.min(
-      (window.innerWidth * 0.9) / clickedImageRect.width,
-      (window.innerHeight * 0.85) / clickedImageRect.height
-    )
-
-    // Move the origin point (clicked image) to viewport center
-    const deltaX = viewportCenterX - imageCenterX
-    const deltaY = viewportCenterY - imageCenterY
-
-    // Calculate final image position after zoom
-    const finalImageX = imageCenterX + deltaX
-    const finalImageY = imageCenterY + deltaY
-    const finalImageWidth = clickedImageRect.width * targetScale
-    const finalImageHeight = clickedImageRect.height * targetScale
-
-    console.log('[GalleryView] Zoom end position:', {
-      center: { x: finalImageX, y: finalImageY },
-      size: { width: finalImageWidth, height: finalImageHeight },
-      scale: targetScale
-    })
-
-    return {
-      scale: targetScale,
-      x: deltaX,
-      y: deltaY,
-      originX: `${originXPercent}%`,
-      originY: `${originYPercent}%`,
-    }
-  }
-
-  const animationProps = getAnimationProps()
+  // For opening: start normal, animate to zoomed
+  // For closing: start zoomed, animate to normal
+  // For idle: normal
+  const gridInitial = isClosing ? { opacity: 1, ...zoomedState } : { opacity: 0, ...normalState }
+  const gridAnimate = isOpening ? { opacity: 1, ...zoomedState } : { opacity: 1, ...normalState }
 
   return (
     <div className={styles.wrapper}>
       <motion.h1
         className={styles.title}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: targetImage ? 0 : 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+        initial={{ opacity: isClosing ? 0 : 0, y: -20 }}
+        animate={{
+          opacity: isTransitioning ? 0 : 1,
+          y: 0,
+        }}
+        transition={{ duration: 0.5, delay: isClosing ? 0.3 : 0 }}
         suppressHydrationWarning
       >
         {categoryTitle}
@@ -144,44 +76,83 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
       <motion.div
         ref={gridRef}
         className={styles.galleryGrid}
-        initial={{ opacity: 0 }}
-        animate={{
-          opacity: 1,
-          scale: animationProps.scale,
-          x: animationProps.x,
-          y: animationProps.y,
-        }}
+        initial={gridInitial}
+        animate={gridAnimate}
         style={{
-          transformOrigin: `${animationProps.originX} ${animationProps.originY}`,
+          transformOrigin: zoomTransform
+            ? `${zoomTransform.originX} ${zoomTransform.originY}`
+            : '50% 50%',
         }}
         transition={{
-          opacity: { duration: 0.5, delay: 0.2 },
-          scale: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
-          x: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
-          y: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+          opacity: { duration: 0.3 },
+          scale: zoomTransition,
+          x: zoomTransition,
+          y: zoomTransition,
         }}
         suppressHydrationWarning
       >
         {images.map((image, index) => {
-          const isClickedImage = targetImage?.id === image.id
-          const shouldFadeOut = targetImage && !isClickedImage
+          const isTargetImage = targetImageId === image.id
+
+          // Opening: target stays visible, others fade out and blur
+          // Closing: target stays visible, others fade IN and unblur
+          // Idle: all visible
+
+          const getImageInitial = () => {
+            if (isClosing) {
+              // When closing, non-target images start hidden/blurred
+              return isTargetImage
+                ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
+                : { opacity: 0, scale: 1, filter: 'blur(10px)' }
+            }
+            // Normal mount: start invisible for staggered entrance
+            return { opacity: 0, scale: 0.8, filter: 'blur(0px)' }
+          }
+
+          const getImageAnimate = () => {
+            if (isOpening) {
+              // Opening: target visible, others fade out and blur
+              return isTargetImage
+                ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
+                : { opacity: 0, scale: 1, filter: 'blur(10px)' }
+            }
+            // Closing or idle: all visible
+            return { opacity: 1, scale: 1, filter: 'blur(0px)' }
+          }
+
+          const getImageTransition = () => {
+            if (isOpening && !isTargetImage) {
+              // Fade out quickly during opening
+              return {
+                opacity: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
+                filter: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
+                scale: { duration: 0.3 },
+              }
+            }
+            if (isClosing && !isTargetImage) {
+              // Fade in during closing
+              return {
+                opacity: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as const },
+                filter: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as const },
+                scale: { duration: 0.3 },
+              }
+            }
+            // Normal staggered entrance
+            return {
+              opacity: { duration: 0.5, delay: 0.3 + index * 0.03 },
+              scale: { duration: 0.5, delay: 0.3 + index * 0.03 },
+              filter: { duration: 0.3 },
+            }
+          }
 
           return (
             <motion.div
               key={image.id}
               className={styles.imageWrapper}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{
-                opacity: shouldFadeOut ? 0 : 1,
-                scale: 1,
-                filter: shouldFadeOut ? 'blur(10px)' : 'blur(0px)',
-              }}
-              transition={{
-                opacity: shouldFadeOut ? { duration: 0.6, ease: [0.4, 0, 0.2, 1] } : { duration: 0.5, delay: 0.3 + index * 0.05 },
-                scale: { duration: 0.5, delay: 0.3 + index * 0.05 },
-                filter: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
-              }}
-              whileHover={!targetImage ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
+              initial={getImageInitial()}
+              animate={getImageAnimate()}
+              transition={getImageTransition()}
+              whileHover={!isTransitioning ? { scale: 1.05, transition: { duration: 0.2 } } : {}}
               suppressHydrationWarning
             >
               <img
@@ -189,7 +160,7 @@ export function GalleryView({ categorySlug, images, categoryTitle }: GalleryView
                 alt={image.alt}
                 onClick={(e) => handleImageClick(image, e)}
                 className={styles.image}
-                style={{ cursor: targetImage ? 'default' : 'pointer' }}
+                style={{ cursor: isTransitioning ? 'default' : 'pointer' }}
               />
             </motion.div>
           )
