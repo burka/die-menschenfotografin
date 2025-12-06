@@ -29,10 +29,8 @@ export function GalleryImage({
 
   const getImageInitial = () => {
     if (shouldFade) {
-      // When closing, non-target images start hidden/blurred
-      return isTarget
-        ? { opacity: 1, scale: 1, filter: 'blur(0px)' }
-        : { opacity: 0, scale: 1, filter: 'blur(10px)' }
+      // When closing, all images start visible (gallery zooms as whole unit)
+      return { opacity: 1, scale: 1, filter: 'blur(0px)' }
     }
     // Normal mount: start invisible for staggered entrance
     return { opacity: 0, scale: 0.8, filter: 'blur(0px)' }
@@ -40,8 +38,8 @@ export function GalleryImage({
 
   const getImageAnimate = () => {
     if (isTransitioning && !isTarget) {
-      // Opening: non-target images fade out and blur
-      return { opacity: 0, scale: 1, filter: 'blur(10px)' }
+      // Opening: non-target images fade out (but don't blur for cleaner zoom)
+      return { opacity: 0, scale: 1, filter: 'blur(0px)' }
     }
     // Target image or closing/idle: all visible
     return { opacity: 1, scale: 1, filter: 'blur(0px)' }
@@ -49,19 +47,20 @@ export function GalleryImage({
 
   const getImageTransition = () => {
     if (isTransitioning && !isTarget) {
-      // Fade out quickly during opening, or fade in during closing
+      // Fade out during opening (no blur, cleaner zoom effect)
       return {
         opacity: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
-        filter: { duration: 0.4, ease: [0.4, 0, 0.2, 1] as const },
-        scale: { duration: 0.3 },
+        filter: { duration: 0 },
+        scale: { duration: 0 },
       }
     }
-    if (shouldFade && !isTarget) {
-      // Fade in during closing
+    if (shouldFade) {
+      // No individual animation during closing - gallery handles zoom
+      // All images immediately present for smooth zoom-out
       return {
-        opacity: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as const },
-        filter: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as const },
-        scale: { duration: 0.3 },
+        opacity: { duration: 0 },
+        filter: { duration: 0 },
+        scale: { duration: 0 },
       }
     }
     // Normal staggered entrance
