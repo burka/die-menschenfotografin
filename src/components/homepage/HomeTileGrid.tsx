@@ -13,16 +13,17 @@ interface HomeTileGridProps {
 }
 
 export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
-  const { activeCategory, handleTileEnter, handleTileLeave, getTileState } =
+  const { activeCategory, lastActiveCategory, handleTileEnter, handleTileLeave, getTileState } =
     useHomeTileInteraction();
   const { transition } = usePageTransition();
 
   // Skip entry animation during backward transition so tiles are immediately visible
   const isBackwardTransition = transition.isActive && transition.direction === 'backward';
 
-  const activeBackgroundImage =
-    activeCategory !== null
-      ? CATEGORIES.find((cat) => cat.slug === activeCategory)?.backgroundBokeh ?? null
+  // Use lastActiveCategory for background to persist the image when leaving tiles
+  const backgroundImage =
+    lastActiveCategory !== null
+      ? CATEGORIES.find((cat) => cat.slug === lastActiveCategory)?.backgroundBokeh ?? null
       : null;
 
   // Split categories into top row (0,1) and bottom row (2,3)
@@ -31,7 +32,7 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
 
   return (
     <div className={styles.container}>
-      <DynamicBackground backgroundImage={activeBackgroundImage} />
+      <DynamicBackground backgroundImage={backgroundImage} />
 
       <div className={styles.grid}>
         {/* Top row tiles */}

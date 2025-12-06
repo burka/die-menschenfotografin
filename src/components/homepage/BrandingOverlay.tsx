@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLegalOverlay } from '@/lib/LegalOverlayContext';
 import styles from './BrandingOverlay.module.css';
 
 interface BrandingOverlayProps {
@@ -14,6 +14,7 @@ const TRANSITION_DURATION = 0.4;
 
 export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const { openLegal } = useLegalOverlay();
 
   return (
     <motion.div
@@ -66,13 +67,19 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
           >
             {isHovered ? (
               <div className={styles.legalLinks}>
-                <Link href="/impressum" className={styles.legalLink}>
+                <button
+                  className={styles.legalLink}
+                  onClick={() => openLegal('impressum')}
+                >
                   Impressum
-                </Link>
+                </button>
                 <span className={styles.legalSeparator}>|</span>
-                <Link href="/datenschutz" className={styles.legalLink}>
+                <button
+                  className={styles.legalLink}
+                  onClick={() => openLegal('datenschutz')}
+                >
                   Datenschutz
-                </Link>
+                </button>
               </div>
             ) : (
               <p className={styles.tagline}>Fine portraits for fine people</p>

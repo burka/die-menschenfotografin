@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs'
 import { usePageTransition } from '@/lib/PageTransitionContext'
+import { useLegalOverlay } from '@/lib/LegalOverlayContext'
 import styles from './GalleryHeader.module.css'
 
 interface GalleryHeaderProps {
@@ -18,6 +19,7 @@ interface GalleryHeaderProps {
 export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: GalleryHeaderProps) {
   const router = useRouter()
   const { transition, startReverseTransition } = usePageTransition()
+  const { openLegal } = useLegalOverlay()
   const [textVisible, setTextVisible] = useState(!transition.isActive || transition.direction === 'backward')
 
   const isForwardTransition = transition.isActive && transition.direction === 'forward'
@@ -66,13 +68,13 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
           die Menschenfotografin
         </Link>
         <span className={styles.brandingSeparator}>/</span>
-        <Link href="/impressum" className={styles.legalLink}>
+        <button className={styles.legalLink} onClick={() => openLegal('impressum')}>
           Impressum
-        </Link>
-        <span className={styles.legalSeparator}>&</span>
-        <Link href="/datenschutz" className={styles.legalLink}>
+        </button>
+        <span className={styles.legalSeparator}>&amp;</span>
+        <button className={styles.legalLink} onClick={() => openLegal('datenschutz')}>
           Datenschutz
-        </Link>
+        </button>
       </motion.div>
 
       <div className={styles.content}>
