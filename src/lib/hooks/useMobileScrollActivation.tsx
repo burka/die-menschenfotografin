@@ -1,10 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { calculateSectionHeights } from '@/lib/services/SectionHeightCalculator'
 
 // Category slugs in order
 const CATEGORY_ORDER = ['business-event', 'hochzeiten-feiern', 'familie-kind', 'kindergarten']
 
+// Configuration for height distribution
+// Total available height = 100vh - branding (8vh) - padding (~2vh) = ~90vh
+const AVAILABLE_HEIGHT_VH = 90
+const HEIGHT_CONFIG = {
+  activeToInactiveRatio: 5.5,
+  minHeightPercent: 10,
+  maxHeightPercent: 58,
+}
+
 interface TileHeights {
-  [slug: string]: number // Height as percentage (0-100)
+  [slug: string]: number // Height in vh
 }
 
 interface UseMobileScrollActivationReturn {
@@ -16,28 +26,24 @@ interface UseMobileScrollActivationReturn {
   containerRef: React.RefObject<HTMLDivElement | null>
 }
 
-// Height constants
-const ACTIVE_HEIGHT = 55 // vh for active tile
-const INACTIVE_HEIGHT = 10 // vh for inactive tiles
-const BRANDING_HEIGHT = 8 // vh for branding row
-
 export function useMobileScrollActivation(
   enabled: boolean = true,
 ): UseMobileScrollActivationReturn {
   const [activeCategory, setActiveCategory] = useState<string | null>(CATEGORY_ORDER[0])
   const [scrollProgress, setScrollProgress] = useState(0)
   const [tileHeights, setTileHeights] = useState<TileHeights>(() => {
-    // Initial state: first tile active
+    // Initial state: calculate heights for scroll position 0
+    const result = calculateSectionHeights(CATEGORY_ORDER.length, 0, HEIGHT_CONFIG)
     const heights: TileHeights = {}
     CATEGORY_ORDER.forEach((slug, index) => {
-      heights[slug] = index === 0 ? ACTIVE_HEIGHT : INACTIVE_HEIGHT
+      // Convert percentage of available height to vh
+      heights[slug] = (result.heights[index] / 100) * AVAILABLE_HEIGHT_VH
     })
     return heights
   })
 
   const elementsRef = useRef<Map<string, HTMLElement>>(new Map())
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const scrollAreaRef = useRef<HTMLDivElement | null>(null)
 
   const [isMobile, setIsMobile] = useState(false)
 
@@ -53,63 +59,6 @@ export function useMobileScrollActivation(
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Calculate tile heights based on scroll progress
-  const calculateHeights = useCallback((progress: number) => {
-    const numTiles = CATEGORY_ORDER.length
-    // Each tile gets an equal portion of the scroll range
-    const segmentSize = 1 / numTiles
-
-    const heights: TileHeights = {}
-    let newActiveCategory: string | null = null
-
-    CATEGORY_ORDER.forEach((slug, index) => {
-      const segmentStart = index * segmentSize
-      const segmentEnd = (index + 1) * segmentSize
-
-      // Calculate how "active" this tile is (0 to 1)
-      let activation = 0
-
-      if (progress >= segmentStart && progress < segmentEnd) {
-        // This tile's segment - it's becoming or is active
-        const segmentProgress = (progress - segmentStart) / segmentSize
-        // Peak activation at the middle of the segment
-        activation = 1 - Math.abs(segmentProgress - 0.5) * 2
-        activation = Math.max(0.3, activation) // Minimum activation when in segment
-        newActiveCategory = slug
-      } else if (index > 0 && progress >= (index - 1) * segmentSize && progress < segmentStart) {
-        // Transitioning from previous tile
-        const transitionProgress = (progress - (index - 1) * segmentSize) / segmentSize
-        activation = transitionProgress * 0.3
-      } else if (
-        index < numTiles - 1 &&
-        progress >= segmentEnd &&
-        progress < (index + 2) * segmentSize
-      ) {
-        // Transitioning to next tile
-        const transitionProgress = (progress - segmentEnd) / segmentSize
-        activation = (1 - transitionProgress) * 0.3
-      }
-
-      // Interpolate height based on activation
-      const height = INACTIVE_HEIGHT + activation * (ACTIVE_HEIGHT - INACTIVE_HEIGHT)
-      heights[slug] = height
-    })
-
-    // Handle edge case: at the very end, last tile is fully active
-    if (progress >= 1 - 0.001) {
-      newActiveCategory = CATEGORY_ORDER[numTiles - 1]
-      heights[CATEGORY_ORDER[numTiles - 1]] = ACTIVE_HEIGHT
-    }
-
-    // Handle edge case: at the very beginning, first tile is fully active
-    if (progress <= 0.001) {
-      newActiveCategory = CATEGORY_ORDER[0]
-      heights[CATEGORY_ORDER[0]] = ACTIVE_HEIGHT
-    }
-
-    return { heights, activeCategory: newActiveCategory }
   }, [])
 
   // Handle scroll events - directly update heights based on scroll position
@@ -128,11 +77,17 @@ export function useMobileScrollActivation(
 
       setScrollProgress(progress)
 
-      const { heights, activeCategory: newActive } = calculateHeights(progress)
+      // Use the pure calculator service - guaranteed to sum correctly
+      const result = calculateSectionHeights(CATEGORY_ORDER.length, progress, HEIGHT_CONFIG)
+
+      // Convert percentages to vh values
+      const heights: TileHeights = {}
+      CATEGORY_ORDER.forEach((slug, index) => {
+        heights[slug] = (result.heights[index] / 100) * AVAILABLE_HEIGHT_VH
+      })
+
       setTileHeights(heights)
-      if (newActive) {
-        setActiveCategory(newActive)
-      }
+      setActiveCategory(CATEGORY_ORDER[result.activeIndex] || null)
     }
 
     const container = containerRef.current
@@ -158,7 +113,7 @@ export function useMobileScrollActivation(
     return () => {
       container.removeEventListener('scroll', onScroll)
     }
-  }, [enabled, isMobile, calculateHeights])
+  }, [enabled, isMobile])
 
   const observeElement = useCallback((slug: string, element: HTMLElement | null) => {
     if (element) {
