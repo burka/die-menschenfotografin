@@ -7,7 +7,11 @@ import { DynamicBackground } from './DynamicBackground';
 import { HomeTile } from './HomeTile';
 import styles from './HomeTileGrid.module.css';
 
-export function HomeTileGrid() {
+interface HomeTileGridProps {
+  onTileClick?: (slug: string) => void;
+}
+
+export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
   const { activeCategory, handleTileEnter, handleTileLeave, getTileState } =
     useHomeTileInteraction();
 
@@ -29,6 +33,7 @@ export function HomeTileGrid() {
               state={getTileState(category.slug)}
               onMouseEnter={() => handleTileEnter(category.slug)}
               onMouseLeave={handleTileLeave}
+              onClick={() => onTileClick?.(category.slug)}
             />
           </div>
         ))}
