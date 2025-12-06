@@ -1,46 +1,52 @@
-'use client';
+'use client'
 
-import { useRef } from 'react';
-import { motion } from 'framer-motion';
-import { CategoryTile, TileState } from '@/types/homepage';
-import { usePageTransition } from '@/lib/PageTransitionContext';
-import styles from './HomeTile.module.css';
+import { useRef } from 'react'
+import { motion } from 'framer-motion'
+import { CategoryTile, TileState } from '@/types/homepage'
+import { usePageTransition } from '@/lib/PageTransitionContext'
+import styles from './HomeTile.module.css'
 
 interface HomeTileProps {
-  category: CategoryTile;
-  state: TileState;
-  onMouseEnter: () => void;
-  onMouseLeave: () => void;
-  onClick?: (rect: DOMRect, titleRect: DOMRect) => void;
-  skipEntryAnimation?: boolean;
+  category: CategoryTile
+  state: TileState
+  onMouseEnter: () => void
+  onMouseLeave: () => void
+  onClick?: (rect: DOMRect, titleRect: DOMRect) => void
+  skipEntryAnimation?: boolean
 }
 
-const TRANSITION_EASING = [0.4, 0, 0.2, 1] as const;
-const HOVER_DURATION = 0.5;
-const ENTRY_DURATION = 0.7;
+const TRANSITION_EASING = [0.4, 0, 0.2, 1] as const
+const HOVER_DURATION = 0.5
+const ENTRY_DURATION = 0.7
 
 const getScaleForState = (state: TileState): number => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+
   switch (state) {
     case 'active':
-      return 1.5;
+      return isMobile ? 1.15 : 1.5 // More subtle scaling on mobile
     case 'inactive':
-      return 0.5;
+      return isMobile ? 0.85 : 0.5 // Less dramatic on mobile to keep content readable
     default:
-      return 1;
+      return 1
   }
-};
+}
 
 const getFilterForState = (state: TileState): string => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+
   if (state === 'inactive') {
-    return 'blur(4px) grayscale(50%)';
+    return isMobile
+      ? 'blur(2px) grayscale(30%)' // Subtle effects on mobile
+      : 'blur(4px) grayscale(50%)'
   }
-  return 'blur(0px) grayscale(0%)';
-};
+  return 'blur(0px) grayscale(0%)'
+}
 
 // Image zoom: cropped (1.3x) when idle, full (1x) when active
 const getImageScaleForState = (state: TileState): number => {
-  return state === 'active' ? 1 : 1.3;
-};
+  return state === 'active' ? 1 : 1.3
+}
 
 export function HomeTile({
   category,
@@ -50,22 +56,23 @@ export function HomeTile({
   onClick,
   skipEntryAnimation = false,
 }: HomeTileProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  const { transition } = usePageTransition();
+  const containerRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  const { transition } = usePageTransition()
 
   // Hide title when this tile is the target of an active transition
-  const isTransitioning = transition.isActive &&
+  const isTransitioning =
+    transition.isActive &&
     transition.phase === 'animating' &&
-    transition.targetSlug === category.slug;
+    transition.targetSlug === category.slug
 
   const handleClick = () => {
     if (containerRef.current && titleRef.current && onClick) {
-      const rect = containerRef.current.getBoundingClientRect();
-      const titleRect = titleRef.current.getBoundingClientRect();
-      onClick(rect, titleRect);
+      const rect = containerRef.current.getBoundingClientRect()
+      const titleRect = titleRef.current.getBoundingClientRect()
+      onClick(rect, titleRect)
     }
-  };
+  }
 
   return (
     <motion.div
@@ -102,14 +109,10 @@ export function HomeTile({
         }}
       />
       <div className={styles.overlay}>
-        <h3
-          ref={titleRef}
-          className={styles.title}
-          style={{ opacity: isTransitioning ? 0 : 1 }}
-        >
+        <h3 ref={titleRef} className={styles.title} style={{ opacity: isTransitioning ? 0 : 1 }}>
           {category.title}
         </h3>
       </div>
     </motion.div>
-  );
+  )
 }

@@ -60,42 +60,74 @@
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1fr auto 1fr 1fr;
-    gap: 1rem;
+    grid-template-rows: 2fr 1fr auto 1fr 1fr;
+    gap: 0.75rem;
     padding: 1rem;
     transform: none;
     top: 0;
     max-height: none;
     height: auto;
     min-height: 100vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
   }
 
   .gridItem {
-    min-height: 180px;
+    min-height: 120px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Default state: first tile large, others small */
   .gridItem[data-position='0'] {
     grid-column: 1;
     grid-row: 1;
+    min-height: 300px;
   }
 
   .gridItem[data-position='1'] {
     grid-column: 1;
     grid-row: 2;
+    min-height: 120px;
   }
 
   .gridItem[data-position='2'] {
     grid-column: 1;
     grid-row: 4;
+    min-height: 120px;
   }
 
   .gridItem[data-position='3'] {
     grid-column: 1;
     grid-row: 5;
+    min-height: 120px;
   }
 
   .brandingRow {
     grid-row: 3;
     padding: 1rem 0;
+  }
+
+  /* Enhanced mobile transitions for scroll activation */
+  .gridItem {
+    position: relative;
+  }
+
+  /* Add visual indicators for scroll-based activation */
+  .gridItem::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .gridItem:hover::before {
+    opacity: 1;
   }
 }

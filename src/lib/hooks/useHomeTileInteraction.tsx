@@ -1,56 +1,87 @@
-import { useState, useCallback, useRef } from 'react';
-import { TileState } from '@/types/homepage';
+import { useState, useCallback, useRef, useEffect } from 'react'
+import { TileState } from '@/types/homepage'
+import { useMobileScrollActivation } from './useMobileScrollActivation'
 
 interface UseHomeTileInteractionReturn {
-  activeCategory: string | null;
-  lastActiveCategory: string | null;
-  handleTileEnter: (slug: string) => void;
-  handleTileLeave: () => void;
-  getTileState: (slug: string) => TileState;
+  activeCategory: string | null
+  lastActiveCategory: string | null
+  handleTileEnter: (slug: string) => void
+  handleTileLeave: () => void
+  getTileState: (slug: string) => TileState
+  observeElement: (slug: string, element: HTMLElement | null) => void
+  unobserveElement: (slug: string) => void
 }
 
 // Delay before deactivating to prevent flicker when switching tiles
-const DEACTIVATION_DELAY = 100;
+const DEACTIVATION_DELAY = 100
 
 export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [lastActiveCategory, setLastActiveCategory] = useState<string | null>(null);
-  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(null)
+  const [lastActiveCategory, setLastActiveCategory] = useState<string | null>(null)
+  const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const handleTileEnter = useCallback((slug: string) => {
-    // Cancel any pending deactivation
-    if (leaveTimeoutRef.current) {
-      clearTimeout(leaveTimeoutRef.current);
-      leaveTimeoutRef.current = null;
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  const {
+    activeCategory: scrollActiveCategory,
+    observeElement,
+    unobserveElement,
+  } = useMobileScrollActivation(isMobile)
+
+  // Use scroll-based active category on mobile, hover-based on desktop
+  const effectiveActiveCategory = isMobile ? scrollActiveCategory : activeCategory
+
+  // Update last active category when effective active category changes
+  useEffect(() => {
+    if (effectiveActiveCategory !== null) {
+      setLastActiveCategory(effectiveActiveCategory)
     }
-    setActiveCategory(slug);
-    setLastActiveCategory(slug);
-  }, []);
+  }, [effectiveActiveCategory])
+
+  const handleTileEnter = useCallback(
+    (slug: string) => {
+      // Only handle hover on desktop
+      if (isMobile) return
+
+      // Cancel any pending deactivation
+      if (leaveTimeoutRef.current) {
+        clearTimeout(leaveTimeoutRef.current)
+        leaveTimeoutRef.current = null
+      }
+      setActiveCategory(slug)
+      setLastActiveCategory(slug)
+    },
+    [isMobile],
+  )
 
   const handleTileLeave = useCallback(() => {
+    // Only handle hover on desktop
+    if (isMobile) return
+
     // Delay deactivation to allow switching between tiles smoothly
     // Only deactivate the active state, keep lastActiveCategory for background
     leaveTimeoutRef.current = setTimeout(() => {
-      setActiveCategory(null);
-      leaveTimeoutRef.current = null;
-    }, DEACTIVATION_DELAY);
-  }, []);
+      setActiveCategory(null)
+      leaveTimeoutRef.current = null
+    }, DEACTIVATION_DELAY)
+  }, [isMobile])
 
   const getTileState = useCallback(
     (slug: string): TileState => {
-      if (activeCategory === null) {
-        return 'default';
+      if (effectiveActiveCategory === null) {
+        return 'default'
       }
-      return activeCategory === slug ? 'active' : 'inactive';
+      return effectiveActiveCategory === slug ? 'active' : 'inactive'
     },
-    [activeCategory],
-  );
+    [effectiveActiveCategory],
+  )
 
   return {
-    activeCategory,
+    activeCategory: effectiveActiveCategory,
     lastActiveCategory,
     handleTileEnter,
     handleTileLeave,
     getTileState,
-  };
+    observeElement,
+    unobserveElement,
+  }
 }
