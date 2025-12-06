@@ -21,3 +21,16 @@
   background-position: center;
   background-repeat: no-repeat;
 }
+
+.title {
+  position: absolute;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 700;
+  margin: 0;
+  color: #fff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  will-change: transform, font-size, top, left;
+  white-space: nowrap;
+}

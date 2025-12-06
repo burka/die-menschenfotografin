@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
@@ -20,9 +20,13 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
   const router = useRouter()
   const { transition, startReverseTransition } = usePageTransition()
   const { openLegal } = useLegalOverlay()
-  const [textVisible, setTextVisible] = useState(!transition.isActive || transition.direction === 'backward')
+  const titleRef = useRef<HTMLHeadingElement>(null)
+  // Hide title during transitions (both forward and backward)
+  const isTransitioning = transition.isActive && transition.phase === 'animating'
+  const [textVisible, setTextVisible] = useState(!isTransitioning)
 
   const isForwardTransition = transition.isActive && transition.direction === 'forward'
+  const isBackwardTransition = transition.isActive && transition.direction === 'backward'
 
   useEffect(() => {
     if (isForwardTransition && transition.phase === 'animating') {
@@ -31,14 +35,20 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
         setTextVisible(true)
       }, 300)
       return () => clearTimeout(timer)
+    } else if (isBackwardTransition && transition.phase === 'animating') {
+      // Hide text during backward transition
+      setTextVisible(false)
     } else if (!transition.isActive) {
       setTextVisible(true)
     }
-  }, [isForwardTransition, transition.phase, transition.isActive])
+  }, [isForwardTransition, isBackwardTransition, transition.phase, transition.isActive])
 
   const handleBackClick = () => {
-    // Start reverse transition using stored tile rect
-    startReverseTransition(categorySlug)
+    if (!titleRef.current) return
+
+    // Start reverse transition using stored tile rect and current title position
+    const titleRect = titleRef.current.getBoundingClientRect()
+    startReverseTransition(categorySlug, titleRect)
 
     setTimeout(() => {
       router.push('/')
@@ -86,6 +96,7 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
           <Breadcrumbs items={breadcrumbs} className={styles.breadcrumbs} onHomeClick={handleBackClick} />
         </motion.div>
         <motion.h1
+          ref={titleRef}
           className={styles.title}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : 20 }}

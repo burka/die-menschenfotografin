@@ -10,6 +10,9 @@ interface TransitionState {
   targetSlug: string | null;
   direction: 'forward' | 'backward';
   phase: 'idle' | 'animating' | 'complete';
+  // Title animation data
+  title: string | null;
+  titleStartRect: DOMRect | null;
 }
 
 // Store original tile rects for reverse navigation
@@ -17,12 +20,14 @@ interface StoredTileRect {
   slug: string;
   rect: DOMRect;
   imageUrl: string;
+  title: string;
+  titleRect: DOMRect;
 }
 
 interface PageTransitionContextType {
   transition: TransitionState;
-  startTransition: (imageUrl: string, rect: DOMRect, slug: string) => void;
-  startReverseTransition: (slug: string) => void;
+  startTransition: (imageUrl: string, rect: DOMRect, slug: string, title: string, titleRect: DOMRect) => void;
+  startReverseTransition: (slug: string, titleRect: DOMRect) => void;
   completeTransition: () => void;
   resetTransition: () => void;
   getStoredTileRect: (slug: string) => StoredTileRect | null;
@@ -38,15 +43,17 @@ const initialState: TransitionState = {
   targetSlug: null,
   direction: 'forward',
   phase: 'idle',
+  title: null,
+  titleStartRect: null,
 };
 
 export function PageTransitionProvider({ children }: { children: ReactNode }) {
   const [transition, setTransition] = useState<TransitionState>(initialState);
   const storedTileRects = useRef<Map<string, StoredTileRect>>(new Map());
 
-  const startTransition = useCallback((imageUrl: string, rect: DOMRect, slug: string) => {
+  const startTransition = useCallback((imageUrl: string, rect: DOMRect, slug: string, title: string, titleRect: DOMRect) => {
     // Store the tile rect for potential reverse navigation
-    storedTileRects.current.set(slug, { slug, rect, imageUrl });
+    storedTileRects.current.set(slug, { slug, rect, imageUrl, title, titleRect });
 
     setTransition({
       isActive: true,
@@ -56,10 +63,12 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
       targetSlug: slug,
       direction: 'forward',
       phase: 'animating',
+      title,
+      titleStartRect: titleRect,
     });
   }, []);
 
-  const startReverseTransition = useCallback((slug: string) => {
+  const startReverseTransition = useCallback((slug: string, titleRect: DOMRect) => {
     const stored = storedTileRects.current.get(slug);
     if (!stored) {
       // No stored rect, can't do transition
@@ -78,6 +87,8 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
       targetSlug: slug,
       direction: 'backward',
       phase: 'animating',
+      title: stored.title,
+      titleStartRect: titleRect,
     });
   }, []);
 

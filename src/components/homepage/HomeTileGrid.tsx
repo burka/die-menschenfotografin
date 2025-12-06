@@ -9,7 +9,7 @@ import { HomeTile } from './HomeTile';
 import styles from './HomeTileGrid.module.css';
 
 interface HomeTileGridProps {
-  onTileClick?: (slug: string, rect: DOMRect) => void;
+  onTileClick?: (slug: string, rect: DOMRect, titleRect: DOMRect) => void;
 }
 
 export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
@@ -43,7 +43,7 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
               state={getTileState(category.slug)}
               onMouseEnter={() => handleTileEnter(category.slug)}
               onMouseLeave={handleTileLeave}
-              onClick={(rect) => onTileClick?.(category.slug, rect)}
+              onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
               skipEntryAnimation={isBackwardTransition}
             />
           </div>
@@ -62,7 +62,7 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
               state={getTileState(category.slug)}
               onMouseEnter={() => handleTileEnter(category.slug)}
               onMouseLeave={handleTileLeave}
-              onClick={(rect) => onTileClick?.(category.slug, rect)}
+              onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
               skipEntryAnimation={isBackwardTransition}
             />
           </div>

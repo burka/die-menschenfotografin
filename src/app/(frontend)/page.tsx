@@ -9,12 +9,12 @@ export default function HomePage() {
   const router = useRouter()
   const { startTransition } = usePageTransition()
 
-  const handleTileClick = (slug: string, rect: DOMRect) => {
+  const handleTileClick = (slug: string, rect: DOMRect, titleRect: DOMRect) => {
     const category = CATEGORIES.find((c) => c.slug === slug)
     if (!category) return
 
     // Start the transition animation
-    startTransition(category.previewImage, rect, slug)
+    startTransition(category.previewImage, rect, slug, category.title, titleRect)
 
     // Navigate after a short delay to let animation start
     setTimeout(() => {

@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CategoryTile, TileState } from '@/types/homepage';
+import { usePageTransition } from '@/lib/PageTransitionContext';
 import styles from './HomeTile.module.css';
 
 interface HomeTileProps {
@@ -10,7 +11,7 @@ interface HomeTileProps {
   state: TileState;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  onClick?: (rect: DOMRect) => void;
+  onClick?: (rect: DOMRect, titleRect: DOMRect) => void;
   skipEntryAnimation?: boolean;
 }
 
@@ -50,11 +51,19 @@ export function HomeTile({
   skipEntryAnimation = false,
 }: HomeTileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const { transition } = usePageTransition();
+
+  // Hide title when this tile is the target of an active transition
+  const isTransitioning = transition.isActive &&
+    transition.phase === 'animating' &&
+    transition.targetSlug === category.slug;
 
   const handleClick = () => {
-    if (containerRef.current && onClick) {
+    if (containerRef.current && titleRef.current && onClick) {
       const rect = containerRef.current.getBoundingClientRect();
-      onClick(rect);
+      const titleRect = titleRef.current.getBoundingClientRect();
+      onClick(rect, titleRect);
     }
   };
 
@@ -93,7 +102,13 @@ export function HomeTile({
         }}
       />
       <div className={styles.overlay}>
-        <h3 className={styles.title}>{category.title}</h3>
+        <h3
+          ref={titleRef}
+          className={styles.title}
+          style={{ opacity: isTransitioning ? 0 : 1 }}
+        >
+          {category.title}
+        </h3>
       </div>
     </motion.div>
   );
