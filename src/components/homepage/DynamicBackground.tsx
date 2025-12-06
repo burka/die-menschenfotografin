@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './DynamicBackground.module.css';
 
@@ -14,6 +15,16 @@ const TRANSITION_DURATION = 0.4;
 const DEFAULT_BACKGROUND = '/images/bg-nature-dark.jpg';
 
 export function DynamicBackground({ backgroundImage }: DynamicBackgroundProps) {
+  const previousImageRef = useRef<string | null>(null);
+  const isFirstActivation = previousImageRef.current === null && backgroundImage !== null;
+
+  useEffect(() => {
+    previousImageRef.current = backgroundImage;
+  }, [backgroundImage]);
+
+  // Only animate on first activation (null -> image), instant switch between images
+  const duration = isFirstActivation ? TRANSITION_DURATION : 0;
+
   return (
     <div className={styles.container}>
       {/* Base layer - always visible */}
@@ -22,18 +33,18 @@ export function DynamicBackground({ backgroundImage }: DynamicBackgroundProps) {
         style={{ backgroundImage: `url(${DEFAULT_BACKGROUND})` }}
       />
 
-      {/* Active background - crossfades on hover */}
+      {/* Active background - instant switch between images, fade in on first activation */}
       <AnimatePresence mode="sync">
         {backgroundImage && (
           <motion.div
             key={backgroundImage}
             className={styles.background}
             style={{ backgroundImage: `url(${backgroundImage})` }}
-            initial={{ opacity: 0 }}
+            initial={{ opacity: isFirstActivation ? 0 : 1 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            exit={{ opacity: 1 }}
             transition={{
-              duration: TRANSITION_DURATION,
+              duration,
               ease: TRANSITION_EASING,
             }}
           />
