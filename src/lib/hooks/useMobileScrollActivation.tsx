@@ -14,7 +14,22 @@ export function useMobileScrollActivation(
   const elementsRef = useRef<Map<string, HTMLElement>>(new Map())
   const ratiosRef = useRef<Map<string, number>>(new Map())
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      // Enable for testing when URL contains ?mobile=true
+      const urlParams =
+        typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+      const forceMobile = urlParams?.get('mobile') === 'true'
+      const mobile = forceMobile || (typeof window !== 'undefined' && window.innerWidth <= 768)
+      setIsMobile(mobile)
+    }
+
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   useEffect(() => {
     if (!enabled || !isMobile) {
@@ -54,8 +69,8 @@ export function useMobileScrollActivation(
         }
       },
       {
-        threshold: Array.from({ length: 101 }, (_, i) => i / 100), // 0.00, 0.01, 0.02, ..., 1.00
-        rootMargin: '-20% 0px -20% 0px', // Consider elements more visible when centered
+        threshold: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+        rootMargin: '-20% 0px -20% 0px',
       },
     )
 

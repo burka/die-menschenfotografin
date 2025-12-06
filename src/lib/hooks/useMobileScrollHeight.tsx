@@ -3,7 +3,11 @@ import { useEffect, useState } from 'react'
 export function useMobileScrollHeight(activeSlug: string | null) {
   const [gridStyles, setGridStyles] = useState<React.CSSProperties>({})
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  // Enable for testing when URL contains ?mobile=true
+  const urlParams =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const forceMobile = urlParams?.get('mobile') === 'true'
+  const isMobile = forceMobile || (typeof window !== 'undefined' && window.innerWidth <= 768)
 
   useEffect(() => {
     if (!isMobile) {
