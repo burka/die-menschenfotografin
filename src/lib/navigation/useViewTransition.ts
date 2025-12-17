@@ -1,79 +1,91 @@
-'use client';
+'use client'
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useState } from 'react'
 
-// View Transitions API types
-type ViewTransitionCallback = () => void | Promise<void>;
+// View Transitions API types - using native types when available
+type ViewTransitionCallback = () => void | Promise<void>
 
-interface ViewTransitionResult {
-  finished: Promise<void>;
-  ready: Promise<void>;
-  updateCallbackDone: Promise<void>;
+// Check if View Transitions API is supported
+function hasViewTransitionsSupport(): boolean {
+  return (
+    typeof document !== 'undefined' &&
+    'startViewTransition' in document &&
+    typeof document.startViewTransition === 'function'
+  )
 }
 
-// Type for document with View Transitions API
-type DocumentWithViewTransitions = {
-  startViewTransition?: (callback: ViewTransitionCallback) => ViewTransitionResult;
-};
+// Load polyfill if needed
+let polyfillPromise: Promise<void> | null = null
 
-let polyfillLoaded = false;
-let polyfillLoading: Promise<void> | null = null;
+async function loadPolyfillIfNeeded(): Promise<boolean> {
+  if (typeof document === 'undefined') return false
 
-async function ensurePolyfill(): Promise<void> {
-  if (typeof document === 'undefined') return;
-  if ((document as unknown as DocumentWithViewTransitions).startViewTransition) return; // Native support
-  if (polyfillLoaded) return;
-
-  if (!polyfillLoading) {
-    // @ts-expect-error - view-transitions-polyfill has no type definitions
-    polyfillLoading = import('view-transitions-polyfill')
-      .then(() => { polyfillLoaded = true; })
-      .catch(err => console.warn('View Transitions polyfill failed:', err));
+  // Already has native support
+  if (hasViewTransitionsSupport()) {
+    return true
   }
 
-  await polyfillLoading;
+  // Load polyfill
+  if (!polyfillPromise) {
+    // @ts-expect-error - view-transitions-polyfill has no type definitions
+    polyfillPromise = import('view-transitions-polyfill')
+      .then(() => {
+        console.debug('[ViewTransition] Polyfill loaded')
+      })
+      .catch((err) => {
+        console.warn('[ViewTransition] Polyfill failed to load:', err)
+      })
+  }
+
+  await polyfillPromise
+  return hasViewTransitionsSupport()
 }
 
 interface ViewTransitionOptions {
-  skipTransition?: boolean;
+  skipTransition?: boolean
 }
 
 export function useViewTransition() {
-  const isSupported = useRef(false);
+  const [isSupported, setIsSupported] = useState(false)
 
+  // Initialize and load polyfill if needed
   useEffect(() => {
-    ensurePolyfill().then(() => {
-      isSupported.current = typeof document !== 'undefined' &&
-        !!(document as unknown as DocumentWithViewTransitions).startViewTransition;
-    });
-  }, []);
+    loadPolyfillIfNeeded().then((supported) => {
+      setIsSupported(supported)
+      console.debug('[ViewTransition] Support:', supported)
+    })
+  }, [])
 
-  const startTransition = useCallback(async (
-    updateDOM: () => void | Promise<void>,
-    options: ViewTransitionOptions = {}
-  ): Promise<void> => {
-    const doc = document as unknown as DocumentWithViewTransitions;
+  const startTransition = useCallback(
+    async (updateDOM: ViewTransitionCallback, options: ViewTransitionOptions = {}): Promise<void> => {
+      // Skip transition if requested or not supported
+      if (options.skipTransition || !hasViewTransitionsSupport()) {
+        console.debug('[ViewTransition] Skipping - not supported or skipTransition=true')
+        await updateDOM()
+        return
+      }
 
-    // Skip transition if requested or not supported
-    if (options.skipTransition || !doc.startViewTransition) {
-      await updateDOM();
-      return;
-    }
+      console.debug('[ViewTransition] Starting transition')
 
-    const transition = doc.startViewTransition(async () => {
-      await updateDOM();
-    });
+      const transition = document.startViewTransition(async () => {
+        console.debug('[ViewTransition] Callback executing - updating DOM')
+        await updateDOM()
+        console.debug('[ViewTransition] Callback complete - DOM updated')
+      })
 
-    try {
-      await transition.finished;
-    } catch (error) {
-      // Transition was skipped (user navigated away, etc.)
-      console.debug('View transition skipped:', error);
-    }
-  }, []);
+      try {
+        await transition.finished
+        console.debug('[ViewTransition] Transition finished')
+      } catch (error) {
+        // Transition was skipped or aborted
+        console.debug('[ViewTransition] Transition skipped:', error)
+      }
+    },
+    [],
+  )
 
   return {
     startTransition,
-    isSupported: isSupported.current
-  };
+    isSupported,
+  }
 }
