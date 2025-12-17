@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { calculateSectionHeights } from '@/lib/services/SectionHeightCalculator'
-
-// Category slugs in order
-const CATEGORY_ORDER = ['business-event', 'hochzeiten-feiern', 'familie-kind', 'kindergarten']
+import { VALID_CATEGORIES } from '@/lib/navigation/types'
+import { useMobile } from './useMobile'
 
 // Configuration for height distribution
 // Total available height = 100vh - branding (8vh) - padding (~2vh) = ~90vh
@@ -29,13 +28,13 @@ interface UseMobileScrollActivationReturn {
 export function useMobileScrollActivation(
   enabled: boolean = true,
 ): UseMobileScrollActivationReturn {
-  const [activeCategory, setActiveCategory] = useState<string | null>(CATEGORY_ORDER[0])
+  const [activeCategory, setActiveCategory] = useState<string | null>(VALID_CATEGORIES[0])
   const [scrollProgress, setScrollProgress] = useState(0)
   const [tileHeights, setTileHeights] = useState<TileHeights>(() => {
     // Initial state: calculate heights for scroll position 0
-    const result = calculateSectionHeights(CATEGORY_ORDER.length, 0, HEIGHT_CONFIG)
+    const result = calculateSectionHeights(VALID_CATEGORIES.length, 0, HEIGHT_CONFIG)
     const heights: TileHeights = {}
-    CATEGORY_ORDER.forEach((slug, index) => {
+    VALID_CATEGORIES.forEach((slug, index) => {
       // Convert percentage of available height to vh
       heights[slug] = (result.heights[index] / 100) * AVAILABLE_HEIGHT_VH
     })
@@ -45,21 +44,7 @@ export function useMobileScrollActivation(
   const elementsRef = useRef<Map<string, HTMLElement>>(new Map())
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const urlParams =
-        typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const forceMobile = urlParams?.get('mobile') === 'true'
-      const mobile = forceMobile || (typeof window !== 'undefined' && window.innerWidth <= 768)
-      setIsMobile(mobile)
-    }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useMobile()
 
   // Handle scroll events - directly update heights based on scroll position
   useEffect(() => {
@@ -78,16 +63,16 @@ export function useMobileScrollActivation(
       setScrollProgress(progress)
 
       // Use the pure calculator service - guaranteed to sum correctly
-      const result = calculateSectionHeights(CATEGORY_ORDER.length, progress, HEIGHT_CONFIG)
+      const result = calculateSectionHeights(VALID_CATEGORIES.length, progress, HEIGHT_CONFIG)
 
       // Convert percentages to vh values
       const heights: TileHeights = {}
-      CATEGORY_ORDER.forEach((slug, index) => {
+      VALID_CATEGORIES.forEach((slug, index) => {
         heights[slug] = (result.heights[index] / 100) * AVAILABLE_HEIGHT_VH
       })
 
       setTileHeights(heights)
-      setActiveCategory(CATEGORY_ORDER[result.activeIndex] || null)
+      setActiveCategory(VALID_CATEGORIES[result.activeIndex] || null)
     }
 
     const container = containerRef.current
