@@ -11,7 +11,7 @@ interface HomeTileProps {
   state: TileState
   onMouseEnter: () => void
   onMouseLeave: () => void
-  onClick?: (() => void) | ((rect: DOMRect, titleRect: DOMRect) => void)
+  onClick?: (rect: DOMRect, titleRect: DOMRect) => void
   skipEntryAnimation?: boolean
 }
 
@@ -73,17 +73,11 @@ export function HomeTile({
   }, [])
 
   const handleClick = () => {
-    if (!onClick) return
+    if (!onClick || !containerRef.current || !titleRef.current) return
 
-    // Check if onClick expects rect parameters (legacy signature)
-    if (onClick.length === 2 && containerRef.current && titleRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      const titleRect = titleRef.current.getBoundingClientRect()
-      ;(onClick as (rect: DOMRect, titleRect: DOMRect) => void)(rect, titleRect)
-    } else {
-      // New signature: no parameters
-      ;(onClick as () => void)()
-    }
+    const rect = containerRef.current.getBoundingClientRect()
+    const titleRect = titleRef.current.getBoundingClientRect()
+    onClick(rect, titleRect)
   }
 
   // View transition name for image - enables smooth morphing to gallery header
