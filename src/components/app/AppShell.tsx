@@ -1,48 +1,38 @@
 'use client'
 
-import { useState, useCallback } from 'react'
-import { NavigationProvider } from '@/lib/navigation'
+import { Suspense, lazy } from 'react'
+import { NavigationProvider, useNavigation } from '@/lib/navigation'
 import { LegalOverlayProvider } from '@/lib/LegalOverlayContext'
-import { PersistentImageLayer } from './PersistentImageLayer'
-import { ContentLayer } from './ContentLayer'
 import { LegalOverlay } from '@/components/legal/LegalOverlay'
 
-// Context for hover state communication between layers
-import { createContext, useContext } from 'react'
+// Lazy load views for code splitting
+const HomeView = lazy(() =>
+  import('@/components/homepage/HomeView').then((m) => ({ default: m.HomeView })),
+)
+const GalleryView = lazy(() =>
+  import('@/components/gallery/GalleryView').then((m) => ({ default: m.GalleryView })),
+)
 
-interface HoverContextType {
-  hoveredCategory: string | null
-  setHoveredCategory: (slug: string | null) => void
+function LoadingFallback() {
+  return <div style={{ minHeight: '100vh' }} />
 }
 
-const HoverContext = createContext<HoverContextType>({
-  hoveredCategory: null,
-  setHoveredCategory: () => {},
-})
+function AppContent() {
+  const { state } = useNavigation()
 
-export function useHoverContext() {
-  return useContext(HoverContext)
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      {state.view === 'home' && <HomeView />}
+      {(state.view === 'gallery' || state.view === 'lightbox') && <GalleryView />}
+    </Suspense>
+  )
 }
 
 export function AppShell() {
-  const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
-
-  const handleSetHoveredCategory = useCallback((slug: string | null) => {
-    setHoveredCategory(slug)
-  }, [])
-
   return (
     <LegalOverlayProvider>
       <NavigationProvider>
-        <HoverContext.Provider
-          value={{
-            hoveredCategory,
-            setHoveredCategory: handleSetHoveredCategory,
-          }}
-        >
-          <PersistentImageLayer hoveredCategory={hoveredCategory} />
-          <ContentLayer />
-        </HoverContext.Provider>
+        <AppContent />
         <LegalOverlay />
       </NavigationProvider>
     </LegalOverlayProvider>

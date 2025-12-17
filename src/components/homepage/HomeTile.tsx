@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CategoryTile, TileState } from '@/types/homepage'
+import { VIEW_TRANSITION_NAMES } from '@/lib/navigation/types'
 import styles from './HomeTile.module.css'
 
 interface HomeTileProps {
@@ -40,6 +41,11 @@ const getFilterForState = (state: TileState, isMobile: boolean): string => {
     return 'blur(4px) grayscale(50%)'
   }
   return 'blur(0px) grayscale(0%)'
+}
+
+// Image zoom: cropped (1.3x) when idle, full (1x) when active
+const getImageScaleForState = (state: TileState): number => {
+  return state === 'active' ? 1 : 1.3
 }
 
 export function HomeTile({
@@ -80,6 +86,9 @@ export function HomeTile({
     }
   }
 
+  // View transition name for the image - enables smooth morphing to gallery header
+  const viewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(category.slug)
+
   return (
     <motion.div
       ref={containerRef}
@@ -103,6 +112,21 @@ export function HomeTile({
         zIndex: state === 'active' ? 5 : 1,
       }}
     >
+      <motion.div
+        className={styles.image}
+        style={{
+          backgroundImage: `url(${category.previewImage})`,
+          viewTransitionName,
+        }}
+        initial={skipEntryAnimation ? { scale: 1.3 } : undefined}
+        animate={{
+          scale: getImageScaleForState(state),
+        }}
+        transition={{
+          duration: HOVER_DURATION,
+          ease: TRANSITION_EASING,
+        }}
+      />
       <div className={styles.overlay}>
         <h3 ref={titleRef} className={styles.title}>
           {category.title}

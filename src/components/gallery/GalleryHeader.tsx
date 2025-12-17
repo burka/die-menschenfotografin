@@ -5,16 +5,21 @@ import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs'
 import { useLegalOverlay } from '@/lib/LegalOverlayContext'
+import { VIEW_TRANSITION_NAMES } from '@/lib/navigation/types'
 import styles from './GalleryHeader.module.css'
 
 interface GalleryHeaderProps {
   title: string
+  heroImage: string
+  categorySlug: string
   breadcrumbs: BreadcrumbItem[]
   onBackClick: () => void
 }
 
 export function GalleryHeader({
   title,
+  heroImage,
+  categorySlug,
   breadcrumbs,
   onBackClick,
 }: GalleryHeaderProps) {
@@ -29,9 +34,20 @@ export function GalleryHeader({
     return () => clearTimeout(timer)
   }, [])
 
+  // View transition name for the hero image - must match HomeTile image
+  const viewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(categorySlug)
+
   return (
     <div className={styles.header}>
-      {/* Hero image comes from PersistentImageLayer */}
+      <div className={styles.heroImageWrapper}>
+        <img
+          src={heroImage}
+          alt={title}
+          className={styles.heroImage}
+          style={{ viewTransitionName }}
+        />
+        <div className={styles.overlay} />
+      </div>
 
       {/* Top right branding */}
       <motion.div

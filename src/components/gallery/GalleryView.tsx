@@ -142,6 +142,8 @@ function GalleryViewContent() {
     <>
       <GalleryHeader
         title={category.title}
+        heroImage={category.previewImage}
+        categorySlug={category.slug}
         breadcrumbs={breadcrumbs}
         onBackClick={handleBackClick}
       />

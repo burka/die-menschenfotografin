@@ -4,8 +4,6 @@
   height: 400px;
   margin-bottom: 48px;
   overflow: hidden;
-  /* New system: Image comes from PersistentImageLayer - this is just the overlay */
-  /* Old system: Image rendered here for backward compatibility */
 }
 
 @media (max-width: 768px) {
@@ -15,8 +13,6 @@
   }
 }
 
-/* Hero image styles - for backward compatibility with old [category]/page.tsx */
-/* TODO: Remove when migration is complete */
 .heroImageWrapper {
   position: absolute;
   top: 0;
@@ -38,7 +34,11 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.5) 100%);
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.5) 100%
+  );
 }
 
 /* Top right branding */
