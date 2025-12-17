@@ -15,17 +15,20 @@
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Disable crossfade for category images - pure position morph */
+/* Hide OLD snapshot - we only want to see the new image morphing */
 ::view-transition-old(category-image-business-event),
-::view-transition-new(category-image-business-event),
 ::view-transition-old(category-image-hochzeiten-feiern),
-::view-transition-new(category-image-hochzeiten-feiern),
 ::view-transition-old(category-image-familie-kind),
+::view-transition-old(category-image-kindergarten) {
+  display: none;
+}
+
+/* NEW snapshot fills the morphing group box - no crossfade animation needed */
+::view-transition-new(category-image-business-event),
+::view-transition-new(category-image-hochzeiten-feiern),
 ::view-transition-new(category-image-familie-kind),
-::view-transition-old(category-image-kindergarten),
 ::view-transition-new(category-image-kindergarten) {
   animation: none;
-  mix-blend-mode: normal;
 }
 
 /* Category title transitions */
