@@ -26,24 +26,21 @@ export function GalleryHeader({
   skipEntryAnimation = false,
 }: GalleryHeaderProps) {
   const { openLegal } = useLegalOverlay()
-  const [textVisible, setTextVisible] = useState(skipEntryAnimation)
+  const [textVisible, setTextVisible] = useState(false)
 
   useEffect(() => {
-    // Skip fade-in animation if coming from view transition
-    if (skipEntryAnimation) {
-      setTextVisible(true)
-      return
-    }
-    // Simple fade in after mount
+    // When coming from view transition, wait for image animation to complete (0.5s)
+    // before showing text/overlay. On direct load, show sooner.
+    const delay = skipEntryAnimation ? 400 : 100
     const timer = setTimeout(() => {
       setTextVisible(true)
-    }, 100)
+    }, delay)
     return () => clearTimeout(timer)
   }, [skipEntryAnimation])
 
-  // View transition names - must match HomeTile for animation
+  // View transition name for image - must match HomeTile for animation
+  // Title fades in separately (not part of view transition)
   const imageViewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(categorySlug)
-  const titleViewTransitionName = VIEW_TRANSITION_NAMES.categoryTitle(categorySlug)
 
   return (
     <div className={styles.header}>
@@ -54,7 +51,12 @@ export function GalleryHeader({
           className={styles.heroImage}
           style={{ viewTransitionName: imageViewTransitionName }}
         />
-        <div className={styles.overlay} />
+        <motion.div
+          className={styles.overlay}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: textVisible ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        />
       </div>
 
       {/* Top right branding */}
@@ -97,7 +99,7 @@ export function GalleryHeader({
 
       <div className={styles.content}>
         <motion.div
-          initial={skipEntryAnimation ? false : { opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
           transition={{ duration: 0.3 }}
         >
@@ -109,10 +111,9 @@ export function GalleryHeader({
         </motion.div>
         <motion.h1
           className={styles.title}
-          initial={skipEntryAnimation ? false : { opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : 20 }}
-          transition={{ duration: skipEntryAnimation ? 0 : 0.4, delay: skipEntryAnimation ? 0 : 0.05 }}
-          style={{ viewTransitionName: titleViewTransitionName }}
+          transition={{ duration: 0.4, delay: 0.05 }}
           suppressHydrationWarning
         >
           {title}

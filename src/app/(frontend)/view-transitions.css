@@ -11,8 +11,8 @@
 ::view-transition-group(category-image-hochzeiten-feiern),
 ::view-transition-group(category-image-familie-kind),
 ::view-transition-group(category-image-kindergarten) {
-  animation-duration: 0.6s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.33, 1, 0.68, 1); /* ease-out-cubic for smoother feel */
 }
 
 /* Hide OLD snapshot - we only want to see the new image morphing */
@@ -31,30 +31,8 @@
   animation: none;
 }
 
-/* Category title transitions */
-::view-transition-group(category-title-business-event),
-::view-transition-group(category-title-hochzeiten-feiern),
-::view-transition-group(category-title-familie-kind),
-::view-transition-group(category-title-kindergarten) {
-  animation-duration: 0.5s;
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Hide OLD title snapshot for clean morph */
-::view-transition-old(category-title-business-event),
-::view-transition-old(category-title-hochzeiten-feiern),
-::view-transition-old(category-title-familie-kind),
-::view-transition-old(category-title-kindergarten) {
-  display: none;
-}
-
-/* NEW title snapshot - no crossfade */
-::view-transition-new(category-title-business-event),
-::view-transition-new(category-title-hochzeiten-feiern),
-::view-transition-new(category-title-familie-kind),
-::view-transition-new(category-title-kindergarten) {
-  animation: none;
-}
+/* Note: Title transitions removed - position/style difference too large for smooth morph */
+/* Titles now fade in separately using Framer Motion */
 
 /* Gallery grid transition */
 ::view-transition-old(gallery-grid) {
