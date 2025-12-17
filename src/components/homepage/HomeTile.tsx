@@ -3,7 +3,6 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { CategoryTile, TileState } from '@/types/homepage'
-import { usePageTransition } from '@/lib/PageTransitionContext'
 import styles from './HomeTile.module.css'
 
 interface HomeTileProps {
@@ -11,7 +10,7 @@ interface HomeTileProps {
   state: TileState
   onMouseEnter: () => void
   onMouseLeave: () => void
-  onClick?: (rect: DOMRect, titleRect: DOMRect) => void
+  onClick?: (() => void) | ((rect: DOMRect, titleRect: DOMRect) => void)
   skipEntryAnimation?: boolean
 }
 
@@ -43,11 +42,6 @@ const getFilterForState = (state: TileState, isMobile: boolean): string => {
   return 'blur(0px) grayscale(0%)'
 }
 
-// Image zoom: cropped (1.3x) when idle, full (1x) when active
-const getImageScaleForState = (state: TileState): number => {
-  return state === 'active' ? 1 : 1.3
-}
-
 export function HomeTile({
   category,
   state,
@@ -58,7 +52,6 @@ export function HomeTile({
 }: HomeTileProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const { transition } = usePageTransition()
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
@@ -73,17 +66,17 @@ export function HomeTile({
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Hide title when this tile is the target of an active transition
-  const isTransitioning =
-    transition.isActive &&
-    transition.phase === 'animating' &&
-    transition.targetSlug === category.slug
-
   const handleClick = () => {
-    if (containerRef.current && titleRef.current && onClick) {
+    if (!onClick) return
+
+    // Check if onClick expects rect parameters (legacy signature)
+    if (onClick.length === 2 && containerRef.current && titleRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
       const titleRect = titleRef.current.getBoundingClientRect()
-      onClick(rect, titleRect)
+      ;(onClick as (rect: DOMRect, titleRect: DOMRect) => void)(rect, titleRect)
+    } else {
+      // New signature: no parameters
+      ;(onClick as () => void)()
     }
   }
 
@@ -110,20 +103,8 @@ export function HomeTile({
         zIndex: state === 'active' ? 5 : 1,
       }}
     >
-      <motion.div
-        className={styles.image}
-        style={{ backgroundImage: `url(${category.previewImage})` }}
-        initial={skipEntryAnimation ? { scale: 1.3 } : undefined}
-        animate={{
-          scale: getImageScaleForState(state),
-        }}
-        transition={{
-          duration: HOVER_DURATION,
-          ease: TRANSITION_EASING,
-        }}
-      />
       <div className={styles.overlay}>
-        <h3 ref={titleRef} className={styles.title} style={{ opacity: isTransitioning ? 0 : 1 }}>
+        <h3 ref={titleRef} className={styles.title}>
           {category.title}
         </h3>
       </div>

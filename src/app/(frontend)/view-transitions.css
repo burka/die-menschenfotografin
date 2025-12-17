@@ -1,0 +1,75 @@
+/* View Transitions CSS */
+
+/* Disable default page transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+}
+
+/* Category image transitions - smooth morph between positions */
+::view-transition-group(category-image-business-event),
+::view-transition-group(category-image-hochzeiten-feiern),
+::view-transition-group(category-image-familie-kind),
+::view-transition-group(category-image-kindergarten) {
+  animation-duration: 0.6s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Disable crossfade for category images - pure position morph */
+::view-transition-old(category-image-business-event),
+::view-transition-new(category-image-business-event),
+::view-transition-old(category-image-hochzeiten-feiern),
+::view-transition-new(category-image-hochzeiten-feiern),
+::view-transition-old(category-image-familie-kind),
+::view-transition-new(category-image-familie-kind),
+::view-transition-old(category-image-kindergarten),
+::view-transition-new(category-image-kindergarten) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Category title transitions */
+::view-transition-group(category-title-business-event),
+::view-transition-group(category-title-hochzeiten-feiern),
+::view-transition-group(category-title-familie-kind),
+::view-transition-group(category-title-kindergarten) {
+  animation-duration: 0.5s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Gallery grid transition */
+::view-transition-old(gallery-grid) {
+  animation: vt-fade-out 0.2s ease-in both;
+}
+
+::view-transition-new(gallery-grid) {
+  animation: vt-fade-slide-in 0.3s ease-out 0.2s both;
+}
+
+/* Lightbox transitions */
+::view-transition-group(lightbox-image) {
+  animation-duration: 0.4s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Keyframe animations */
+@keyframes vt-fade-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Disable pointer events during transitions */
+::view-transition {
+  pointer-events: none;
+}

@@ -1,67 +1,37 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs'
-import { usePageTransition } from '@/lib/PageTransitionContext'
 import { useLegalOverlay } from '@/lib/LegalOverlayContext'
 import styles from './GalleryHeader.module.css'
 
 interface GalleryHeaderProps {
   title: string
-  heroImage: string
   breadcrumbs: BreadcrumbItem[]
-  categorySlug: string
+  onBackClick: () => void
 }
 
-export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: GalleryHeaderProps) {
-  const router = useRouter()
-  const { transition, startReverseTransition } = usePageTransition()
+export function GalleryHeader({
+  title,
+  breadcrumbs,
+  onBackClick,
+}: GalleryHeaderProps) {
   const { openLegal } = useLegalOverlay()
-  const titleRef = useRef<HTMLHeadingElement>(null)
-  // Hide title during transitions (both forward and backward)
-  const isTransitioning = transition.isActive && transition.phase === 'animating'
-  const [textVisible, setTextVisible] = useState(!isTransitioning)
-
-  const isForwardTransition = transition.isActive && transition.direction === 'forward'
-  const isBackwardTransition = transition.isActive && transition.direction === 'backward'
+  const [textVisible, setTextVisible] = useState(false)
 
   useEffect(() => {
-    if (isForwardTransition && transition.phase === 'animating') {
-      // Show text at halfway point of animation
-      const timer = setTimeout(() => {
-        setTextVisible(true)
-      }, 300)
-      return () => clearTimeout(timer)
-    } else if (isBackwardTransition && transition.phase === 'animating') {
-      // Hide text during backward transition
-      setTextVisible(false)
-    } else if (!transition.isActive) {
+    // Simple fade in after mount
+    const timer = setTimeout(() => {
       setTextVisible(true)
-    }
-  }, [isForwardTransition, isBackwardTransition, transition.phase, transition.isActive])
-
-  const handleBackClick = () => {
-    if (!titleRef.current) return
-
-    // Start reverse transition using stored tile rect and current title position
-    const titleRect = titleRef.current.getBoundingClientRect()
-    startReverseTransition(categorySlug, titleRect)
-
-    setTimeout(() => {
-      router.push('/')
-    }, 50)
-  }
+    }, 100)
+    return () => clearTimeout(timer)
+  }, [])
 
   return (
     <div className={styles.header}>
-      <div className={styles.heroImageWrapper}>
-        {/* Image always renders - overlay fades out to reveal it */}
-        <img src={heroImage} alt={title} className={styles.heroImage} />
-        <div className={styles.overlay} />
-      </div>
+      {/* Hero image comes from PersistentImageLayer */}
 
       {/* Top right branding */}
       <motion.div
@@ -70,11 +40,25 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
         animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <Link href="/" className={styles.brandingLink} onClick={(e) => { e.preventDefault(); handleBackClick(); }}>
+        <Link
+          href="/"
+          className={styles.brandingLink}
+          onClick={(e) => {
+            e.preventDefault()
+            onBackClick()
+          }}
+        >
           Kathrin Krause
         </Link>
         <span className={styles.brandingSeparator}>/</span>
-        <Link href="/" className={styles.brandingLink} onClick={(e) => { e.preventDefault(); handleBackClick(); }}>
+        <Link
+          href="/"
+          className={styles.brandingLink}
+          onClick={(e) => {
+            e.preventDefault()
+            onBackClick()
+          }}
+        >
           die Menschenfotografin
         </Link>
         <span className={styles.brandingSeparator}>/</span>
@@ -93,10 +77,13 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
           transition={{ duration: 0.3 }}
         >
-          <Breadcrumbs items={breadcrumbs} className={styles.breadcrumbs} onHomeClick={handleBackClick} />
+          <Breadcrumbs
+            items={breadcrumbs}
+            className={styles.breadcrumbs}
+            onHomeClick={onBackClick}
+          />
         </motion.div>
         <motion.h1
-          ref={titleRef}
           className={styles.title}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : 20 }}

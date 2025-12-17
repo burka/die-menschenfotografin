@@ -3,20 +3,19 @@
 import { useRef, useEffect } from 'react'
 import { CATEGORIES } from '@/data/categories'
 import { useHomeTileInteraction } from '@/lib/hooks/useHomeTileInteraction'
-import { usePageTransition } from '@/lib/PageTransitionContext'
 import { BrandingOverlay } from './BrandingOverlay'
-import { DynamicBackground } from './DynamicBackground'
 import { HomeTile } from './HomeTile'
 import styles from './HomeTileGrid.module.css'
 
 interface HomeTileGridProps {
   onTileClick?: (slug: string, rect: DOMRect, titleRect: DOMRect) => void
+  onTileHover?: (slug: string | null) => void
+  hoveredCategory?: string | null
 }
 
-export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
+export function HomeTileGrid({ onTileClick, onTileHover }: HomeTileGridProps) {
   const {
     activeCategory,
-    lastActiveCategory,
     handleTileEnter,
     handleTileLeave,
     getTileState,
@@ -26,13 +25,9 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
     containerRef,
     isMobile,
   } = useHomeTileInteraction()
-  const { transition } = usePageTransition()
 
   // Refs for tile elements to enable scroll observation on mobile
   const tileRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
-
-  // Skip entry animation during backward transition so tiles are immediately visible
-  const isBackwardTransition = transition.isActive && transition.direction === 'backward'
 
   // Set up element observation for mobile scroll detection
   useEffect(() => {
@@ -49,12 +44,6 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
     }
   }, [observeElement, unobserveElement])
 
-  // Use lastActiveCategory for background to persist the image when leaving tiles
-  const backgroundImage =
-    lastActiveCategory !== null
-      ? (CATEGORIES.find((cat) => cat.slug === lastActiveCategory)?.backgroundBokeh ?? null)
-      : null
-
   // Split categories into top row (0,1) and bottom row (2,3)
   const topCategories = CATEGORIES.slice(0, 2)
   const bottomCategories = CATEGORIES.slice(2, 4)
@@ -66,10 +55,19 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
     return { height: `${height}vh` }
   }
 
+  // Handle tile hover with both internal state and external callback
+  const handleEnter = (slug: string) => {
+    handleTileEnter(slug)
+    onTileHover?.(slug)
+  }
+
+  const handleLeave = () => {
+    handleTileLeave()
+    onTileHover?.(null)
+  }
+
   return (
     <div className={styles.container} ref={containerRef}>
-      <DynamicBackground backgroundImage={backgroundImage} />
-
       {/* Sticky content that stays visible while scrolling */}
       <div className={styles.stickyContent}>
         <div className={styles.grid}>
@@ -88,10 +86,9 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
               <HomeTile
                 category={category}
                 state={getTileState(category.slug)}
-                onMouseEnter={() => handleTileEnter(category.slug)}
-                onMouseLeave={handleTileLeave}
+                onMouseEnter={() => handleEnter(category.slug)}
+                onMouseLeave={handleLeave}
                 onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
-                skipEntryAnimation={isBackwardTransition}
               />
             </div>
           ))}
@@ -116,10 +113,9 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
               <HomeTile
                 category={category}
                 state={getTileState(category.slug)}
-                onMouseEnter={() => handleTileEnter(category.slug)}
-                onMouseLeave={handleTileLeave}
+                onMouseEnter={() => handleEnter(category.slug)}
+                onMouseLeave={handleLeave}
                 onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
-                skipEntryAnimation={isBackwardTransition}
               />
             </div>
           ))}

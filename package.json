@@ -40,7 +40,7 @@
     "payload": "3.63.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "view-transitions-polyfill": "^0.3.0"
+    "view-transitions-polyfill": "^1.0.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

@@ -1,9 +1,7 @@
 import React from 'react'
 import './styles.css'
-import { PageTransitionProvider } from '@/lib/PageTransitionContext'
-import { LegalOverlayProvider } from '@/lib/LegalOverlayContext'
-import { TransitionOverlay } from '@/components/transition/TransitionOverlay'
-import { LegalOverlay } from '@/components/legal/LegalOverlay'
+import './view-transitions.css'
+import { AppShell } from '@/components/app'
 
 export const metadata = {
   description: 'die-menschenfotografin.de - Photography by Kathrin',
@@ -16,13 +14,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="de">
       <body>
-        <LegalOverlayProvider>
-          <PageTransitionProvider>
-            <main>{children}</main>
-            <TransitionOverlay />
-          </PageTransitionProvider>
-          <LegalOverlay />
-        </LegalOverlayProvider>
+        <AppShell />
+        {/* Children kept for legal pages that are still route-based */}
+        {children}
       </body>
     </html>
   )
