@@ -18,7 +18,7 @@
 .main {
   position: relative;
   z-index: 1;
-  background: white;
+  /* No background - the backgroundOverlay provides the white tint */
   min-height: 60vh;
   padding: 2rem;
 }

@@ -26,15 +26,19 @@ export function GalleryHeader({
   skipEntryAnimation = false,
 }: GalleryHeaderProps) {
   const { openLegal } = useLegalOverlay()
-  const [textVisible, setTextVisible] = useState(false)
+  // When coming from view transition, show content immediately
+  // When loading directly, fade in after short delay
+  const [textVisible, setTextVisible] = useState(skipEntryAnimation)
 
   useEffect(() => {
-    // When coming from view transition, wait for image animation to complete (0.5s)
-    // before showing text/overlay. On direct load, show sooner.
-    const delay = skipEntryAnimation ? 400 : 100
+    if (skipEntryAnimation) {
+      // Already visible
+      return
+    }
+    // Direct page load - fade in after mount
     const timer = setTimeout(() => {
       setTextVisible(true)
-    }, delay)
+    }, 100)
     return () => clearTimeout(timer)
   }, [skipEntryAnimation])
 
@@ -53,16 +57,16 @@ export function GalleryHeader({
         />
         <motion.div
           className={styles.overlay}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: textVisible ? 1 : 0 }}
-          transition={{ duration: 0.3 }}
+          initial={{ opacity: 0.3 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
         />
       </div>
 
       {/* Top right branding */}
       <motion.div
         className={styles.topBranding}
-        initial={{ opacity: 0, y: -10 }}
+        initial={skipEntryAnimation ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
@@ -99,7 +103,7 @@ export function GalleryHeader({
 
       <div className={styles.content}>
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={skipEntryAnimation ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
           transition={{ duration: 0.3 }}
         >
@@ -111,7 +115,7 @@ export function GalleryHeader({
         </motion.div>
         <motion.h1
           className={styles.title}
-          initial={{ opacity: 0, y: 20 }}
+          initial={skipEntryAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : 20 }}
           transition={{ duration: 0.4, delay: 0.05 }}
           suppressHydrationWarning
@@ -123,7 +127,7 @@ export function GalleryHeader({
       {/* Mobile legal links */}
       <motion.div
         className={styles.mobileLegalLinks}
-        initial={{ opacity: 0 }}
+        initial={skipEntryAnimation ? false : { opacity: 0 }}
         animate={{ opacity: textVisible ? 1 : 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
       >
