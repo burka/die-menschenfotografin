@@ -1,9 +1,10 @@
 'use client'
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef } from 'react'
 import { motion } from 'framer-motion'
 import { CategoryTile, TileState } from '@/types/homepage'
 import { VIEW_TRANSITION_NAMES } from '@/lib/navigation/types'
+import { useMobile } from '@/lib/hooks/useMobile'
 import styles from './HomeTile.module.css'
 
 interface HomeTileProps {
@@ -58,19 +59,7 @@ export function HomeTile({
 }: HomeTileProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      const urlParams = new URLSearchParams(window.location.search)
-      const forceMobile = urlParams.get('mobile') === 'true'
-      setIsMobile(forceMobile || window.innerWidth <= 768)
-    }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useMobile()
 
   const handleClick = () => {
     if (!onClick || !containerRef.current || !titleRef.current) return

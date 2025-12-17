@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { calculateSectionHeights } from '@/lib/services/SectionHeightCalculator'
 import { VALID_CATEGORIES } from '@/lib/navigation/types'
-import { useMobile } from './useMobile'
 
 // Configuration for height distribution
 // Total available height = 100vh - branding (8vh) - padding (~2vh) = ~90vh
@@ -44,11 +43,9 @@ export function useMobileScrollActivation(
   const elementsRef = useRef<Map<string, HTMLElement>>(new Map())
   const containerRef = useRef<HTMLDivElement | null>(null)
 
-  const isMobile = useMobile()
-
   // Handle scroll events - directly update heights based on scroll position
   useEffect(() => {
-    if (!enabled || !isMobile) return
+    if (!enabled) return
 
     const handleScroll = () => {
       const container = containerRef.current
@@ -98,7 +95,7 @@ export function useMobileScrollActivation(
     return () => {
       container.removeEventListener('scroll', onScroll)
     }
-  }, [enabled, isMobile])
+  }, [enabled])
 
   const observeElement = useCallback((slug: string, element: HTMLElement | null) => {
     if (element) {

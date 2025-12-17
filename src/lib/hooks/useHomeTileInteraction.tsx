@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { TileState } from '@/types/homepage'
 import { useMobileScrollActivation } from './useMobileScrollActivation'
+import { useMobile } from './useMobile'
 
 interface UseHomeTileInteractionReturn {
   activeCategory: string | null
@@ -23,22 +24,7 @@ export function useHomeTileInteraction(): UseHomeTileInteractionReturn {
   const [lastActiveCategory, setLastActiveCategory] = useState<string | null>(null)
   const leaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const checkMobile = () => {
-      // Enable for testing when URL contains ?mobile=true
-      const urlParams =
-        typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
-      const forceMobile = urlParams?.get('mobile') === 'true'
-      const mobile = forceMobile || (typeof window !== 'undefined' && window.innerWidth <= 768)
-      setIsMobile(mobile)
-    }
-
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
+  const isMobile = useMobile()
 
   const {
     activeCategory: scrollActiveCategory,
