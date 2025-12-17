@@ -97,24 +97,17 @@ export function HomeTile({
         zIndex: state === 'active' ? 5 : 1,
       }}
     >
-      <motion.div
-        className={styles.imageWrapper}
-        initial={skipEntryAnimation ? { scale: 1.3 } : undefined}
-        animate={{
-          scale: getImageScaleForState(state),
-        }}
-        transition={{
-          duration: HOVER_DURATION,
-          ease: TRANSITION_EASING,
-        }}
-      >
+      <div className={styles.imageWrapper}>
         <img
           src={category.previewImage}
           alt={category.title}
           className={styles.image}
-          style={{ viewTransitionName: imageViewTransitionName }}
+          style={{
+            viewTransitionName: imageViewTransitionName,
+            transform: `scale(${getImageScaleForState(state)})`,
+          }}
         />
-      </motion.div>
+      </div>
       <div className={styles.overlay}>
         <h3 ref={titleRef} className={styles.title}>
           {category.title}
