@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import { useNavigation } from '@/lib/navigation'
 import { CATEGORIES } from '@/data/categories'
 import { GalleryTransitionProvider, useGalleryTransition } from '@/lib/useGalleryTransition'
@@ -11,6 +12,7 @@ import { LightboxImage } from '@/components/lightbox/LightboxImage'
 import { LightboxNavigation } from '@/components/lightbox/LightboxNavigation'
 import type { GalleryImage } from '@/types/gallery'
 import type { BreadcrumbItem } from '@/components/layout/Breadcrumbs'
+import styles from './GalleryView.module.css'
 
 // Mock images (same as before)
 const MOCK_IMAGES: GalleryImage[] = [
@@ -137,19 +139,28 @@ function GalleryViewContent() {
 
   const isOpening = direction === 'opening'
   const isClosing = direction === 'closing'
+  const isFromHome = state.previousView === 'home'
 
   return (
-    <>
+    <div className={styles.container}>
+      {/* White overlay - fades in over the persistent background */}
+      <motion.div
+        className={styles.backgroundOverlay}
+        initial={isFromHome ? { opacity: 0 } : false}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: isFromHome ? 0.2 : 0 }}
+      />
+
       <GalleryHeader
         title={category.title}
         heroImage={category.previewImage}
         categorySlug={category.slug}
         breadcrumbs={breadcrumbs}
         onBackClick={handleBackClick}
-        skipEntryAnimation={state.previousView === 'home'}
+        skipEntryAnimation={isFromHome}
       />
 
-      <main style={{ background: 'white', minHeight: '100vh', padding: '2rem' }}>
+      <main className={styles.main}>
         <div data-gallery-grid>
           <GalleryGrid images={MOCK_IMAGES} onImageClick={handleImageClick} />
         </div>
@@ -180,7 +191,7 @@ function GalleryViewContent() {
           />
         </LightboxOverlay>
       )}
-    </>
+    </div>
   )
 }
 
