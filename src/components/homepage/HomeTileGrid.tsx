@@ -11,9 +11,10 @@ interface HomeTileGridProps {
   onTileClick?: (slug: string, rect: DOMRect, titleRect: DOMRect) => void
   onTileHover?: (slug: string | null) => void
   hoveredCategory?: string | null
+  skipEntryAnimation?: boolean
 }
 
-export function HomeTileGrid({ onTileClick, onTileHover }: HomeTileGridProps) {
+export function HomeTileGrid({ onTileClick, onTileHover, skipEntryAnimation }: HomeTileGridProps) {
   const {
     activeCategory,
     handleTileEnter,
@@ -89,6 +90,7 @@ export function HomeTileGrid({ onTileClick, onTileHover }: HomeTileGridProps) {
                 onMouseEnter={() => handleEnter(category.slug)}
                 onMouseLeave={handleLeave}
                 onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
+                skipEntryAnimation={skipEntryAnimation}
               />
             </div>
           ))}
@@ -116,6 +118,7 @@ export function HomeTileGrid({ onTileClick, onTileHover }: HomeTileGridProps) {
                 onMouseEnter={() => handleEnter(category.slug)}
                 onMouseLeave={handleLeave}
                 onClick={(rect, titleRect) => onTileClick?.(category.slug, rect, titleRect)}
+                skipEntryAnimation={skipEntryAnimation}
               />
             </div>
           ))}

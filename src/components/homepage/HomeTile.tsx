@@ -86,8 +86,9 @@ export function HomeTile({
     }
   }
 
-  // View transition name for the image - enables smooth morphing to gallery header
-  const viewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(category.slug)
+  // View transition names - enable smooth morphing to gallery header
+  const imageViewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(category.slug)
+  const titleViewTransitionName = VIEW_TRANSITION_NAMES.categoryTitle(category.slug)
 
   return (
     <motion.div
@@ -127,11 +128,15 @@ export function HomeTile({
           src={category.previewImage}
           alt={category.title}
           className={styles.image}
-          style={{ viewTransitionName }}
+          style={{ viewTransitionName: imageViewTransitionName }}
         />
       </motion.div>
       <div className={styles.overlay}>
-        <h3 ref={titleRef} className={styles.title}>
+        <h3
+          ref={titleRef}
+          className={styles.title}
+          style={{ viewTransitionName: titleViewTransitionName }}
+        >
           {category.title}
         </h3>
       </div>

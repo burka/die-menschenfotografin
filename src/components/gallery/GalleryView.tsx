@@ -146,6 +146,7 @@ function GalleryViewContent() {
         categorySlug={category.slug}
         breadcrumbs={breadcrumbs}
         onBackClick={handleBackClick}
+        skipEntryAnimation={state.previousView === 'home'}
       />
 
       <main style={{ background: 'white', minHeight: '100vh', padding: '2rem' }}>

@@ -40,6 +40,22 @@
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Hide OLD title snapshot for clean morph */
+::view-transition-old(category-title-business-event),
+::view-transition-old(category-title-hochzeiten-feiern),
+::view-transition-old(category-title-familie-kind),
+::view-transition-old(category-title-kindergarten) {
+  display: none;
+}
+
+/* NEW title snapshot - no crossfade */
+::view-transition-new(category-title-business-event),
+::view-transition-new(category-title-hochzeiten-feiern),
+::view-transition-new(category-title-familie-kind),
+::view-transition-new(category-title-kindergarten) {
+  animation: none;
+}
+
 /* Gallery grid transition */
 ::view-transition-old(gallery-grid) {
   animation: vt-fade-out 0.2s ease-in both;

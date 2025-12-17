@@ -14,6 +14,7 @@ interface GalleryHeaderProps {
   categorySlug: string
   breadcrumbs: BreadcrumbItem[]
   onBackClick: () => void
+  skipEntryAnimation?: boolean
 }
 
 export function GalleryHeader({
@@ -22,20 +23,27 @@ export function GalleryHeader({
   categorySlug,
   breadcrumbs,
   onBackClick,
+  skipEntryAnimation = false,
 }: GalleryHeaderProps) {
   const { openLegal } = useLegalOverlay()
-  const [textVisible, setTextVisible] = useState(false)
+  const [textVisible, setTextVisible] = useState(skipEntryAnimation)
 
   useEffect(() => {
+    // Skip fade-in animation if coming from view transition
+    if (skipEntryAnimation) {
+      setTextVisible(true)
+      return
+    }
     // Simple fade in after mount
     const timer = setTimeout(() => {
       setTextVisible(true)
     }, 100)
     return () => clearTimeout(timer)
-  }, [])
+  }, [skipEntryAnimation])
 
-  // View transition name for the hero image - must match HomeTile image
-  const viewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(categorySlug)
+  // View transition names - must match HomeTile for animation
+  const imageViewTransitionName = VIEW_TRANSITION_NAMES.categoryImage(categorySlug)
+  const titleViewTransitionName = VIEW_TRANSITION_NAMES.categoryTitle(categorySlug)
 
   return (
     <div className={styles.header}>
@@ -44,7 +52,7 @@ export function GalleryHeader({
           src={heroImage}
           alt={title}
           className={styles.heroImage}
-          style={{ viewTransitionName }}
+          style={{ viewTransitionName: imageViewTransitionName }}
         />
         <div className={styles.overlay} />
       </div>
@@ -89,7 +97,7 @@ export function GalleryHeader({
 
       <div className={styles.content}>
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
+          initial={skipEntryAnimation ? false : { opacity: 0, y: -10 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : -10 }}
           transition={{ duration: 0.3 }}
         >
@@ -101,9 +109,10 @@ export function GalleryHeader({
         </motion.div>
         <motion.h1
           className={styles.title}
-          initial={{ opacity: 0, y: 20 }}
+          initial={skipEntryAnimation ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: textVisible ? 1 : 0, y: textVisible ? 0 : 20 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
+          transition={{ duration: skipEntryAnimation ? 0 : 0.4, delay: skipEntryAnimation ? 0 : 0.05 }}
+          style={{ viewTransitionName: titleViewTransitionName }}
           suppressHydrationWarning
         >
           {title}

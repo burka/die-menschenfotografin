@@ -14,31 +14,41 @@ function hasViewTransitionsSupport(): boolean {
   )
 }
 
-// Load polyfill if needed
-let polyfillPromise: Promise<void> | null = null
+// Load polyfill eagerly - start loading immediately when module is imported
+let polyfillPromise: Promise<boolean> | null = null
+let polyfillLoaded = false
 
-async function loadPolyfillIfNeeded(): Promise<boolean> {
-  if (typeof document === 'undefined') return false
+function loadPolyfillIfNeeded(): Promise<boolean> {
+  if (typeof document === 'undefined') return Promise.resolve(false)
 
   // Already has native support
   if (hasViewTransitionsSupport()) {
-    return true
+    polyfillLoaded = true
+    return Promise.resolve(true)
   }
 
-  // Load polyfill
+  // Load polyfill (only once)
   if (!polyfillPromise) {
-    // @ts-expect-error - view-transitions-polyfill has no type definitions
-    polyfillPromise = import('view-transitions-polyfill')
-      .then(() => {
+    polyfillPromise = (async () => {
+      try {
+        // @ts-expect-error - view-transitions-polyfill has no type definitions
+        await import('view-transitions-polyfill')
         console.debug('[ViewTransition] Polyfill loaded')
-      })
-      .catch((err) => {
+        polyfillLoaded = hasViewTransitionsSupport()
+        return polyfillLoaded
+      } catch (err) {
         console.warn('[ViewTransition] Polyfill failed to load:', err)
-      })
+        return false
+      }
+    })()
   }
 
-  await polyfillPromise
-  return hasViewTransitionsSupport()
+  return polyfillPromise
+}
+
+// Start loading polyfill immediately on module import (client-side only)
+if (typeof window !== 'undefined') {
+  loadPolyfillIfNeeded()
 }
 
 interface ViewTransitionOptions {
@@ -58,9 +68,22 @@ export function useViewTransition() {
 
   const startTransition = useCallback(
     async (updateDOM: ViewTransitionCallback, options: ViewTransitionOptions = {}): Promise<void> => {
-      // Skip transition if requested or not supported
-      if (options.skipTransition || !hasViewTransitionsSupport()) {
-        console.debug('[ViewTransition] Skipping - not supported or skipTransition=true')
+      // Skip transition if explicitly requested
+      if (options.skipTransition) {
+        console.debug('[ViewTransition] Skipping - skipTransition=true')
+        await updateDOM()
+        return
+      }
+
+      // Wait for polyfill to load if still pending (ensures first click works)
+      if (!polyfillLoaded && polyfillPromise) {
+        console.debug('[ViewTransition] Waiting for polyfill...')
+        await polyfillPromise
+      }
+
+      // Check support after polyfill is loaded
+      if (!hasViewTransitionsSupport()) {
+        console.debug('[ViewTransition] Skipping - not supported')
         await updateDOM()
         return
       }
