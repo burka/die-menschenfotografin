@@ -1,0 +1,76 @@
+.imageWrapper {
+  overflow: hidden;
+  contain: layout paint;
+}
+
+/* Tile position - used in home view grid */
+.imageWrapper[data-position='tile'] {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+}
+
+/* Header position - full width hero at top */
+.imageWrapper[data-position='header'] {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 400px;
+  border-radius: 0;
+  z-index: 1;
+}
+
+@media (max-width: 768px) {
+  .imageWrapper[data-position='header'] {
+    height: 300px;
+  }
+}
+
+/* Hidden position - off-screen when not active */
+.imageWrapper[data-position='hidden'] {
+  position: fixed;
+  top: -200vh;
+  left: 0;
+  width: 100vw;
+  height: 400px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Gradient overlay for text readability in header */
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.1) 30%,
+    rgba(0, 0, 0, 0.4) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.imageWrapper[data-position='header'] .overlay {
+  opacity: 1;
+}
+
+/* Hover effects passed via data attributes */
+.imageWrapper[data-hover='true'] {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+.imageWrapper[data-hover='false'][data-any-hover='true'] {
+  filter: blur(2px) grayscale(30%);
+  transform: scale(0.98);
+}
