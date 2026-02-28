@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 import type { CMSCategory, CMSMedia, CMSSiteSettings, ContentBlock } from '@/types/cms'
 import type { CategoryTile } from '@/types/homepage'
+import { DEFAULTS } from '@/lib/defaults'
 
 /**
  * Get the Payload instance (uses Local API - no HTTP requests needed)
@@ -11,21 +12,28 @@ async function getPayloadClient() {
 }
 
 /**
- * Helper to extract URL from a media field (handles both populated and ID-only references)
+ * Type guard: checks if a media field is a populated object (vs. a raw ID)
  */
-function getMediaUrl(media: CMSMedia | string | undefined | null): string {
-  if (!media) return ''
-  if (typeof media === 'string') return media
-  return media.url || ''
+function isMediaObject(value: unknown): value is CMSMedia {
+  return typeof value === 'object' && value !== null && 'url' in value
 }
 
 /**
- * Helper to extract alt text from a media field
+ * Extract URL from a media field (handles populated objects, string URLs, and IDs)
  */
-function getMediaAlt(media: CMSMedia | string | undefined | null): string {
+function getMediaUrl(media: unknown): string {
   if (!media) return ''
-  if (typeof media === 'string') return ''
-  return media.alt || ''
+  if (isMediaObject(media)) return media.url || ''
+  if (typeof media === 'string') return media
+  return ''
+}
+
+/**
+ * Extract alt text from a media field
+ */
+function getMediaAlt(media: unknown): string {
+  if (isMediaObject(media)) return media.alt || ''
+  return ''
 }
 
 /**
@@ -42,10 +50,10 @@ export async function getCategories(): Promise<CategoryTile[]> {
   })
 
   return result.docs.map((doc) => ({
-    slug: doc.slug as string,
-    title: doc.title as string,
-    previewImage: getMediaUrl(doc.previewImage as unknown as CMSMedia | string | undefined),
-    backgroundBokeh: getMediaUrl(doc.heroImage as unknown as CMSMedia | string | undefined),
+    slug: doc.slug,
+    title: doc.title,
+    previewImage: getMediaUrl(doc.previewImage),
+    backgroundBokeh: getMediaUrl(doc.heroImage),
   }))
 }
 
@@ -57,9 +65,7 @@ export async function getCategoryBySlug(slug: string): Promise<CMSCategory | nul
 
   const result = await payload.find({
     collection: 'categories',
-    where: {
-      slug: { equals: slug },
-    },
+    where: { slug: { equals: slug } },
     depth: 2,
     limit: 1,
   })
@@ -70,12 +76,12 @@ export async function getCategoryBySlug(slug: string): Promise<CMSCategory | nul
 
   return {
     id: String(doc.id),
-    title: doc.title as string,
-    slug: doc.slug as string,
-    sortOrder: (doc.sortOrder as number) || 0,
-    heroImage: doc.heroImage as unknown as CMSMedia | string | undefined,
-    previewImage: doc.previewImage as unknown as CMSMedia | string | undefined,
-    description: doc.description as string | undefined,
+    title: doc.title,
+    slug: doc.slug,
+    sortOrder: doc.sortOrder || 0,
+    heroImage: isMediaObject(doc.heroImage) ? (doc.heroImage as CMSMedia) : undefined,
+    previewImage: isMediaObject(doc.previewImage) ? (doc.previewImage as CMSMedia) : undefined,
+    description: doc.description ?? undefined,
     content: (doc.content as ContentBlock[] | undefined) || [],
   }
 }
@@ -91,14 +97,16 @@ export async function getSiteSettings(): Promise<CMSSiteSettings> {
     depth: 0,
   })
 
+  const contact = settings.contact as { email?: string; phone?: string; address?: string } | undefined
+
   return {
-    photographerName: (settings.photographerName as string) || 'Kathrin Krause',
-    brandName: (settings.brandName as string) || 'die Menschenfotografin',
-    tagline: (settings.tagline as string) || 'Fine portraits for fine people',
+    photographerName: settings.photographerName || DEFAULTS.photographerName,
+    brandName: settings.brandName || DEFAULTS.brandName,
+    tagline: settings.tagline || DEFAULTS.tagline,
     contact: {
-      email: (settings.contact as Record<string, string>)?.email || 'info@die-menschenfotografin.de',
-      phone: (settings.contact as Record<string, string>)?.phone || '',
-      address: (settings.contact as Record<string, string>)?.address || '',
+      email: contact?.email || DEFAULTS.contact.email,
+      phone: contact?.phone || DEFAULTS.contact.phone,
+      address: contact?.address || DEFAULTS.contact.address,
     },
     impressum: settings.impressum as CMSSiteSettings['impressum'],
     datenschutz: settings.datenschutz as CMSSiteSettings['datenschutz'],
@@ -117,10 +125,7 @@ export async function getAllCategorySlugs(): Promise<string[]> {
     limit: 100,
   })
 
-  return result.docs.map((doc) => doc.slug as string)
+  return result.docs.map((doc) => doc.slug)
 }
 
-/**
- * Helper: Get media URL for use in components
- */
 export { getMediaUrl, getMediaAlt }

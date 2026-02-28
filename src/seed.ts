@@ -1,5 +1,6 @@
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { categoriesData, siteSettingsData } from './seed-data'
 
 async function seed() {
   console.log('Seeding CMS data...')
@@ -7,35 +8,6 @@ async function seed() {
   const payload = await getPayload({ config })
 
   // 1. Create categories
-  const categoriesData = [
-    {
-      title: 'Business & Event',
-      slug: 'business-event',
-      sortOrder: 1,
-      description:
-        'Professionelle Business- und Event-Fotografie für Unternehmen und Veranstaltungen.',
-    },
-    {
-      title: 'Hochzeiten & Feiern',
-      slug: 'hochzeiten-feiern',
-      sortOrder: 2,
-      description: 'Emotionale Hochzeitsfotografie und Dokumentation besonderer Feiern.',
-    },
-    {
-      title: 'Familie & Kind',
-      slug: 'familie-kind',
-      sortOrder: 3,
-      description: 'Authentische Familien- und Kinderfotografie mit Herz.',
-    },
-    {
-      title: 'Kindergarten',
-      slug: 'kindergarten',
-      sortOrder: 4,
-      description:
-        'Moderne Kindergartenfotografie mit Herz – Strahlende Kinderaugen, lautes Gekicher, viel Spaß und authentische Bilder.',
-    },
-  ]
-
   for (const cat of categoriesData) {
     // Check if category already exists
     const existing = await payload.find({
@@ -64,16 +36,7 @@ async function seed() {
   console.log('Updating site settings...')
   await payload.updateGlobal({
     slug: 'site-settings',
-    data: {
-      photographerName: 'Kathrin Krause',
-      brandName: 'die Menschenfotografin',
-      tagline: 'Fine portraits for fine people',
-      contact: {
-        email: 'info@die-menschenfotografin.de',
-        phone: '+49 1556 6222336',
-        address: 'Kathrin Krause\nFichtenweg 28\n22962 Siek',
-      },
-    },
+    data: siteSettingsData,
   })
 
   console.log('Seed complete!')

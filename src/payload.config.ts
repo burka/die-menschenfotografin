@@ -1,6 +1,19 @@
 // storage-adapter-import-placeholder
 import { sqliteD1Adapter } from '@payloadcms/db-d1-sqlite' // database-adapter-import
-import { lexicalEditor } from '@payloadcms/richtext-lexical'
+import {
+  lexicalEditor,
+  BoldFeature,
+  ItalicFeature,
+  UnderlineFeature,
+  StrikethroughFeature,
+  LinkFeature,
+  HeadingFeature,
+  UnorderedListFeature,
+  OrderedListFeature,
+  BlockquoteFeature,
+  ParagraphFeature,
+  HorizontalRuleFeature,
+} from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
@@ -13,6 +26,7 @@ import { Media } from './collections/Media'
 import { Images } from './collections/Images'
 import { Categories } from './collections/Categories'
 import { SiteSettings } from './globals/SiteSettings'
+import { categoriesData, siteSettingsData } from './seed-data'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -32,7 +46,54 @@ export default buildConfig({
   },
   collections: [Users, Media, Images, Categories],
   globals: [SiteSettings],
-  editor: lexicalEditor(),
+  onInit: async (payload) => {
+    // Auto-seed: check if the CMS database is empty (no categories exist)
+    const existing = await payload.find({
+      collection: 'categories',
+      limit: 1,
+    })
+
+    if (existing.totalDocs === 0) {
+      payload.logger.info('No categories found — auto-seeding CMS data...')
+
+      // Create all categories
+      for (const cat of categoriesData) {
+        payload.logger.info(`Creating category "${cat.title}"...`)
+        await payload.create({
+          collection: 'categories',
+          data: cat,
+        })
+      }
+
+      // Populate site settings
+      payload.logger.info('Populating site settings...')
+      await payload.updateGlobal({
+        slug: 'site-settings',
+        data: siteSettingsData,
+      })
+
+      payload.logger.info('Auto-seed complete — 4 categories and site settings created.')
+    } else {
+      payload.logger.info(
+        `CMS already seeded (${existing.totalDocs} categories found). Skipping auto-seed.`,
+      )
+    }
+  },
+  editor: lexicalEditor({
+    features: [
+      ParagraphFeature(),
+      HeadingFeature({ enabledHeadingSizes: ['h2', 'h3', 'h4'] }),
+      BoldFeature(),
+      ItalicFeature(),
+      UnderlineFeature(),
+      StrikethroughFeature(),
+      LinkFeature(),
+      UnorderedListFeature(),
+      OrderedListFeature(),
+      BlockquoteFeature(),
+      HorizontalRuleFeature(),
+    ],
+  }),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
