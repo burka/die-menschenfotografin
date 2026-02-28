@@ -44,8 +44,8 @@ export async function getCategories(): Promise<CategoryTile[]> {
   return result.docs.map((doc) => ({
     slug: doc.slug as string,
     title: doc.title as string,
-    previewImage: getMediaUrl(doc.previewImage as CMSMedia | string | undefined),
-    backgroundBokeh: getMediaUrl(doc.heroImage as CMSMedia | string | undefined),
+    previewImage: getMediaUrl(doc.previewImage as unknown as CMSMedia | string | undefined),
+    backgroundBokeh: getMediaUrl(doc.heroImage as unknown as CMSMedia | string | undefined),
   }))
 }
 
@@ -73,8 +73,8 @@ export async function getCategoryBySlug(slug: string): Promise<CMSCategory | nul
     title: doc.title as string,
     slug: doc.slug as string,
     sortOrder: (doc.sortOrder as number) || 0,
-    heroImage: doc.heroImage as CMSMedia | string | undefined,
-    previewImage: doc.previewImage as CMSMedia | string | undefined,
+    heroImage: doc.heroImage as unknown as CMSMedia | string | undefined,
+    previewImage: doc.previewImage as unknown as CMSMedia | string | undefined,
     description: doc.description as string | undefined,
     content: (doc.content as ContentBlock[] | undefined) || [],
   }
