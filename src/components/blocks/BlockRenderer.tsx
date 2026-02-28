@@ -2,6 +2,8 @@ import type { ContentBlock } from '@/types/cms'
 import type { GalleryImage } from '@/types/gallery'
 import { GalleryBlock } from './GalleryBlock'
 import { RichTextBlock } from './RichTextBlock'
+import { ImageTextBlock } from './ImageTextBlock'
+import { HeadingBlock } from './HeadingBlock'
 
 export interface BlockRendererProps {
   blocks: ContentBlock[]
@@ -28,6 +30,27 @@ export function BlockRenderer({ blocks, onImageClick }: BlockRendererProps) {
 
           case 'richTextBlock':
             return <RichTextBlock key={key} content={block.content} />
+
+          case 'imageTextBlock':
+            return (
+              <ImageTextBlock
+                key={key}
+                image={block.image}
+                heading={block.heading}
+                text={block.text}
+                imagePosition={block.imagePosition}
+              />
+            )
+
+          case 'headingBlock':
+            return (
+              <HeadingBlock
+                key={key}
+                heading={block.heading}
+                level={block.level}
+                description={block.description}
+              />
+            )
 
           default:
             console.warn(`Unknown block type encountered:`, block)
