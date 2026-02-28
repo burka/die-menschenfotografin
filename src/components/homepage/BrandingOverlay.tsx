@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLegalOverlay } from '@/lib/LegalOverlayContext';
+import { useSiteSettings } from '@/lib/SiteSettingsContext';
 import styles from './BrandingOverlay.module.css';
 
 interface BrandingOverlayProps {
@@ -16,6 +17,7 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const { openLegal } = useLegalOverlay();
+  const settings = useSiteSettings();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -43,7 +45,7 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
       onBlur={() => setIsHovered(false)}
     >
       <div className={styles.mainLine}>
-        <h1 className={styles.title}>Kathrin Krause</h1>
+        <h1 className={styles.title}>{settings.photographerName}</h1>
         <AnimatePresence mode="wait">
           {isAnyTileActive && (
             <motion.span
@@ -62,7 +64,7 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
           layout
           transition={{ duration: TRANSITION_DURATION, ease: TRANSITION_EASING }}
         >
-          die Menschenfotografin
+          {settings.brandName}
         </motion.h2>
       </div>
       <AnimatePresence mode="wait">
@@ -93,7 +95,7 @@ export function BrandingOverlay({ isAnyTileActive }: BrandingOverlayProps) {
               </div>
             ) : (
               <>
-                <p className={styles.tagline}>Fine portraits for fine people</p>
+                <p className={styles.tagline}>{settings.tagline}</p>
                 {isMobile && (
                   <div className={styles.legalLinksMobile}>
                     <button
