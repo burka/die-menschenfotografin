@@ -80,6 +80,9 @@ export function TransitionOverlay() {
   const titleStartRect = transition.titleStartRect;
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
+  // On desktop, active tiles have container scale 1.5, so visual border-radius is 8 * 1.5 = 12
+  const tileScaleFactor = isMobile ? 1 : 1.5;
+
   // Start values for title (from tile)
   const titleStartX = titleStartRect ? titleStartRect.left : 0;
   const titleStartY = titleStartRect ? titleStartRect.top : 0;
@@ -115,7 +118,7 @@ export function TransitionOverlay() {
               left: startRect.left,
               width: startRect.width,
               height: startRect.height,
-              borderRadius: isForward ? 8 : 0,
+              borderRadius: isForward ? 8 * tileScaleFactor : 0,
               opacity: 1,
             }}
             animate={
@@ -139,15 +142,31 @@ export function TransitionOverlay() {
               opacity: { duration: FADE_OUT_DURATION, ease: 'easeOut' },
             }}
           >
+            {/* Image - forward: tile is hovered (scale 1.0) → header (scale 1.0), no zoom change
+                       backward: header (scale 1.0) → tile default (scale 1.3) */}
             <motion.div
               className={styles.image}
               style={{ backgroundImage: `url(${transition.imageUrl})` }}
-              initial={{ scale: isForward ? 1.3 : 1 }}
+              initial={{ scale: 1 }}
               animate={{ scale: isForward ? 1 : 1.3 }}
               transition={{
                 duration: TRANSITION_DURATION,
                 ease: TRANSITION_EASING,
               }}
+            />
+            {/* Tile gradient - matches HomeTile overlay gradient */}
+            <motion.div
+              className={styles.tileGradient}
+              initial={{ opacity: isForward ? 1 : 0 }}
+              animate={{ opacity: isForward ? 0 : 1 }}
+              transition={{ duration: TRANSITION_DURATION, ease: TRANSITION_EASING }}
+            />
+            {/* Header gradient - matches GalleryHeader overlay gradient */}
+            <motion.div
+              className={styles.headerGradient}
+              initial={{ opacity: isForward ? 0 : 1 }}
+              animate={{ opacity: isForward ? 1 : 0 }}
+              transition={{ duration: TRANSITION_DURATION, ease: TRANSITION_EASING }}
             />
           </motion.div>
 

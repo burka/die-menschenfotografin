@@ -76,14 +76,33 @@ export function PageTransitionProvider({ children }: { children: ReactNode }) {
     }
 
     // Calculate header rect (current position)
-    const headerHeight = window.innerWidth <= 768 ? 300 : 400;
+    const isMobile = window.innerWidth <= 768;
+    const headerHeight = isMobile ? 300 : 400;
     const headerRect = new DOMRect(0, 0, window.innerWidth, headerHeight);
+
+    // The stored rect was captured in active/hovered state (container scale 1.5 on desktop).
+    // On return, tiles render in default state (scale 1.0). Compute the default-state rect
+    // so the overlay targets the correct position.
+    let targetRect = stored.rect;
+    if (!isMobile) {
+      const scaleRatio = 1 / 1.5; // default(1.0) / active(1.5)
+      const centerX = stored.rect.left + stored.rect.width / 2;
+      const centerY = stored.rect.top + stored.rect.height / 2;
+      const targetWidth = stored.rect.width * scaleRatio;
+      const targetHeight = stored.rect.height * scaleRatio;
+      targetRect = new DOMRect(
+        centerX - targetWidth / 2,
+        centerY - targetHeight / 2,
+        targetWidth,
+        targetHeight,
+      );
+    }
 
     setTransition({
       isActive: true,
       imageUrl: stored.imageUrl,
       startRect: headerRect,
-      targetRect: stored.rect,
+      targetRect,
       targetSlug: slug,
       direction: 'backward',
       phase: 'animating',
