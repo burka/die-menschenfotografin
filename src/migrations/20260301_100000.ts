@@ -1,6 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-d1-sqlite'
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload: _payload, req: _req }: MigrateUpArgs): Promise<void> {
   // Add sort_order column to categories
   await db.run(sql`ALTER TABLE \`categories\` ADD \`sort_order\` numeric DEFAULT 0 NOT NULL;`)
   await db.run(sql`CREATE INDEX \`categories_sort_order_idx\` ON \`categories\` (\`sort_order\`);`)
@@ -47,7 +47,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.run(sql`CREATE INDEX \`categories_blocks_heading_block_path_idx\` ON \`categories_blocks_heading_block\` (\`_path\`);`)
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload: _payload, req: _req }: MigrateDownArgs): Promise<void> {
   await db.run(sql`DROP TABLE IF EXISTS \`categories_blocks_image_text_block\`;`)
   await db.run(sql`DROP TABLE IF EXISTS \`categories_blocks_heading_block\`;`)
   await db.run(sql`DROP INDEX IF EXISTS \`categories_sort_order_idx\`;`)

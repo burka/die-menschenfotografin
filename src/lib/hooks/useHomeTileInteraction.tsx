@@ -2,10 +2,6 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { TileState } from '@/types/homepage'
 import { useMobileScrollActivation } from './useMobileScrollActivation'
 
-interface TileHeights {
-  [slug: string]: number
-}
-
 interface UseHomeTileInteractionReturn {
   activeCategory: string | null
   lastActiveCategory: string | null
