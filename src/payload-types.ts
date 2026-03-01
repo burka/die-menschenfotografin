@@ -90,8 +90,12 @@ export interface Config {
   db: {
     defaultIDType: number;
   };
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   user: User & {
     collection: 'users';
@@ -210,9 +214,17 @@ export interface Category {
    */
   slug: string;
   /**
+   * Reihenfolge auf der Startseite (niedrigere Zahl = weiter vorne)
+   */
+  sortOrder: number;
+  /**
    * Hero image for the category card
    */
   heroImage?: (number | null) | Media;
+  /**
+   * Vorschaubild für die Homepage-Kachel
+   */
+  previewImage?: (number | null) | Media;
   /**
    * Short description of the category
    */
@@ -247,6 +259,46 @@ export interface Category {
             id?: string | null;
             blockName?: string | null;
             blockType: 'richTextBlock';
+          }
+        | {
+            image: number | Media;
+            /**
+             * Optionale Überschrift
+             */
+            heading?: string | null;
+            text: {
+              root: {
+                type: string;
+                children: {
+                  type: any;
+                  version: number;
+                  [k: string]: unknown;
+                }[];
+                direction: ('ltr' | 'rtl') | null;
+                format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                indent: number;
+                version: number;
+              };
+              [k: string]: unknown;
+            };
+            /**
+             * Position des Bildes
+             */
+            imagePosition?: ('left' | 'right') | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'imageTextBlock';
+          }
+        | {
+            heading: string;
+            level?: ('h2' | 'h3' | 'h4') | null;
+            /**
+             * Optionaler Beschreibungstext unter der Überschrift
+             */
+            description?: string | null;
+            id?: string | null;
+            blockName?: string | null;
+            blockType: 'headingBlock';
           }
       )[]
     | null;
@@ -394,7 +446,9 @@ export interface ImagesSelect<T extends boolean = true> {
 export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   slug?: T;
+  sortOrder?: T;
   heroImage?: T;
+  previewImage?: T;
   description?: T;
   content?:
     | T
@@ -410,6 +464,25 @@ export interface CategoriesSelect<T extends boolean = true> {
           | T
           | {
               content?: T;
+              id?: T;
+              blockName?: T;
+            };
+        imageTextBlock?:
+          | T
+          | {
+              image?: T;
+              heading?: T;
+              text?: T;
+              imagePosition?: T;
+              id?: T;
+              blockName?: T;
+            };
+        headingBlock?:
+          | T
+          | {
+              heading?: T;
+              level?: T;
+              description?: T;
               id?: T;
               blockName?: T;
             };
@@ -456,6 +529,89 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  /**
+   * Name der Fotografin
+   */
+  photographerName: string;
+  /**
+   * Markenname / Website-Titel
+   */
+  brandName: string;
+  /**
+   * Slogan / Tagline
+   */
+  tagline?: string | null;
+  contact?: {
+    email?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  };
+  /**
+   * Impressum-Text (Rechtstext)
+   */
+  impressum?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Datenschutzerklärung (Rechtstext)
+   */
+  datenschutz?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  photographerName?: T;
+  brandName?: T;
+  tagline?: T;
+  contact?:
+    | T
+    | {
+        email?: T;
+        phone?: T;
+        address?: T;
+      };
+  impressum?: T;
+  datenschutz?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

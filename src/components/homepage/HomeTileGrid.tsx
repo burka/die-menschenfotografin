@@ -1,8 +1,8 @@
 'use client'
 
 import { useRef, useEffect } from 'react'
-import { CATEGORIES } from '@/data/categories'
 import { useHomeTileInteraction } from '@/lib/hooks/useHomeTileInteraction'
+import type { CategoryTile } from '@/types/homepage'
 import { usePageTransition } from '@/lib/PageTransitionContext'
 import { BrandingOverlay } from './BrandingOverlay'
 import { DynamicBackground } from './DynamicBackground'
@@ -10,10 +10,11 @@ import { HomeTile } from './HomeTile'
 import styles from './HomeTileGrid.module.css'
 
 interface HomeTileGridProps {
+  categories: CategoryTile[]
   onTileClick?: (slug: string, rect: DOMRect, titleRect: DOMRect) => void
 }
 
-export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
+export function HomeTileGrid({ categories, onTileClick }: HomeTileGridProps) {
   const {
     activeCategory,
     lastActiveCategory,
@@ -52,12 +53,12 @@ export function HomeTileGrid({ onTileClick }: HomeTileGridProps) {
   // Use lastActiveCategory for background to persist the image when leaving tiles
   const backgroundImage =
     lastActiveCategory !== null
-      ? (CATEGORIES.find((cat) => cat.slug === lastActiveCategory)?.backgroundBokeh ?? null)
+      ? (categories.find((cat) => cat.slug === lastActiveCategory)?.backgroundBokeh ?? null)
       : null
 
   // Split categories into top row (0,1) and bottom row (2,3)
-  const topCategories = CATEGORIES.slice(0, 2)
-  const bottomCategories = CATEGORIES.slice(2, 4)
+  const topCategories = categories.slice(0, 2)
+  const bottomCategories = categories.slice(2, 4)
 
   // Get height style for a tile (only on mobile)
   const getTileStyle = (slug: string): React.CSSProperties => {

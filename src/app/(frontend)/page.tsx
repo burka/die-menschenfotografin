@@ -1,26 +1,8 @@
-'use client'
+import { getCategories } from '@/lib/payload'
+import { HomePageClient } from '@/components/homepage/HomePageClient'
 
-import { useRouter } from 'next/navigation'
-import { HomeTileGrid } from '@/components/homepage/HomeTileGrid'
-import { usePageTransition } from '@/lib/PageTransitionContext'
-import { CATEGORIES } from '@/data/categories'
+export default async function HomePage() {
+  const categories = await getCategories()
 
-export default function HomePage() {
-  const router = useRouter()
-  const { startTransition } = usePageTransition()
-
-  const handleTileClick = (slug: string, rect: DOMRect, titleRect: DOMRect) => {
-    const category = CATEGORIES.find((c) => c.slug === slug)
-    if (!category) return
-
-    // Start the transition animation
-    startTransition(category.previewImage, rect, slug, category.title, titleRect)
-
-    // Navigate after a short delay to let animation start
-    setTimeout(() => {
-      router.push(`/${slug}`)
-    }, 50)
-  }
-
-  return <HomeTileGrid onTileClick={handleTileClick} />
+  return <HomePageClient categories={categories} />
 }

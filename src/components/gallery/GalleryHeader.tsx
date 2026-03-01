@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/layout/Breadcrumbs'
 import { usePageTransition } from '@/lib/PageTransitionContext'
 import { useLegalOverlay } from '@/lib/LegalOverlayContext'
+import { useSiteSettings } from '@/lib/SiteSettingsContext'
 import styles from './GalleryHeader.module.css'
 
 interface GalleryHeaderProps {
@@ -20,6 +21,7 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
   const router = useRouter()
   const { transition, startReverseTransition } = usePageTransition()
   const { openLegal } = useLegalOverlay()
+  const settings = useSiteSettings()
   const titleRef = useRef<HTMLHeadingElement>(null)
   // Hide title during transitions (both forward and backward)
   const isTransitioning = transition.isActive && transition.phase === 'animating'
@@ -71,11 +73,11 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
         transition={{ duration: 0.3, delay: 0.1 }}
       >
         <Link href="/" className={styles.brandingLink} onClick={(e) => { e.preventDefault(); handleBackClick(); }}>
-          Kathrin Krause
+          {settings.photographerName}
         </Link>
         <span className={styles.brandingSeparator}>/</span>
         <Link href="/" className={styles.brandingLink} onClick={(e) => { e.preventDefault(); handleBackClick(); }}>
-          die Menschenfotografin
+          {settings.brandName}
         </Link>
         <span className={styles.brandingSeparator}>/</span>
         <button className={styles.legalLink} onClick={() => openLegal('impressum')}>
