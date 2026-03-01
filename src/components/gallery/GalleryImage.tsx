@@ -86,6 +86,7 @@ export function GalleryImage({
       style={{ cursor: isTransitioning ? 'default' : 'pointer' }}
       suppressHydrationWarning
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         ref={imageRef}
         src={image.src}

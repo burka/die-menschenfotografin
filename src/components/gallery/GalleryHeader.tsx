@@ -61,6 +61,7 @@ export function GalleryHeader({ title, heroImage, breadcrumbs, categorySlug }: G
     <div className={styles.header}>
       <div className={styles.heroImageWrapper}>
         {/* Image always renders - overlay fades out to reveal it */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={heroImage} alt={title} className={styles.heroImage} />
         <div className={styles.overlay} />
       </div>
