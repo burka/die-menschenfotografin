@@ -4,6 +4,9 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { ImpressumFallback } from '@/components/legal/ImpressumFallback'
 import styles from '../legal.module.css'
 
+// D1 database is only available at runtime on Cloudflare Workers
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Impressum - Kathrin Krause | die Menschenfotografin',
   description: 'Impressum für die-menschenfotografin.de',

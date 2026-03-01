@@ -4,6 +4,9 @@ import { RichText } from '@payloadcms/richtext-lexical/react'
 import { DatenschutzFallback } from '@/components/legal/DatenschutzFallback'
 import styles from '../legal.module.css'
 
+// D1 database is only available at runtime on Cloudflare Workers
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Datenschutz - Kathrin Krause | die Menschenfotografin',
   description: 'Datenschutzerklärung für die-menschenfotografin.de',
