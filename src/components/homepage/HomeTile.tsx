@@ -73,7 +73,7 @@ export function HomeTile({
     return () => window.removeEventListener('resize', checkMobile)
   }, [])
 
-  // Hide title when this tile is the target of an active transition
+  // Hide tile when it is the target of an active transition (overlay covers it)
   const isTransitioning =
     transition.isActive &&
     transition.phase === 'animating' &&
@@ -108,6 +108,7 @@ export function HomeTile({
       onClick={handleClick}
       style={{
         zIndex: state === 'active' ? 5 : 1,
+        visibility: isTransitioning ? 'hidden' : 'visible',
       }}
     >
       <motion.div
@@ -123,7 +124,7 @@ export function HomeTile({
         }}
       />
       <div className={styles.overlay}>
-        <h3 ref={titleRef} className={styles.title} style={{ opacity: isTransitioning ? 0 : 1 }}>
+        <h3 ref={titleRef} className={styles.title}>
           {category.title}
         </h3>
       </div>

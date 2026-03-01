@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { GalleryTransitionProvider, useGalleryTransition } from '@/lib/useGalleryTransition'
+import { usePageTransition } from '@/lib/PageTransitionContext'
 import { GalleryHeader } from '@/components/gallery/GalleryHeader'
 import { BlockRenderer } from '@/components/blocks/BlockRenderer'
 import { LightboxOverlay } from '@/components/lightbox/LightboxOverlay'
@@ -40,6 +42,8 @@ function collectGalleryImages(blocks: ContentBlock[]): GalleryImage[] {
   return images
 }
 
+const CONTENT_EASING = [0.4, 0, 0.2, 1] as const
+
 function CategoryPageContent({ categorySlug, title, heroImage, blocks }: CategoryPageClientProps) {
   const allImages = collectGalleryImages(blocks)
   const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null)
@@ -47,6 +51,9 @@ function CategoryPageContent({ categorySlug, title, heroImage, blocks }: Categor
 
   const { startOpen, startClose, completeTransition, isTransitioning, direction } =
     useGalleryTransition()
+  const { transition } = usePageTransition()
+  // Delay content entrance when arriving via page transition
+  const contentDelay = transition.isActive ? 0.4 : 0
 
   const breadcrumbs: BreadcrumbItem[] = [
     { label: 'Home', href: '/' },
@@ -108,17 +115,24 @@ function CategoryPageContent({ categorySlug, title, heroImage, blocks }: Categor
         categorySlug={categorySlug}
       />
 
-      <main
+      <motion.main
         style={{
           background: 'white',
           minHeight: '100vh',
           padding: '2rem',
         }}
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{
+          duration: 0.5,
+          delay: contentDelay,
+          ease: CONTENT_EASING,
+        }}
       >
         <div data-gallery-grid style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <BlockRenderer blocks={blocks} onImageClick={handleImageClick} />
         </div>
-      </main>
+      </motion.main>
 
       {selectedImage && (
         <LightboxOverlay
